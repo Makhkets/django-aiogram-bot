@@ -15,7 +15,7 @@ class Profile(models.Model):
     role = models.CharField(max_length=200, default="", verbose_name="Роль пользователя")
 
     def __str__(self):
-        return self.first_name
+        return str(self.first_name)
 
     class Meta:
         verbose_name = "Аккаунты"
@@ -37,7 +37,7 @@ class Applications(models.Model):
     time_update_location = models.DateTimeField(auto_now=True, verbose_name="Время изменения локации")
 
     def __str__(self):
-        return self.product
+        return str(self.product)
 
     class Meta:
         verbose_name = "Заявки"
@@ -50,7 +50,7 @@ class RoleCode(models.Model):
     role = models.CharField(max_length=200, verbose_name="Роль которая выдается после активация кода")
 	
     def __str__(self):
-        return self.code
+        return str(self.code)
 
     class Meta:
         verbose_name = "Коды"
@@ -59,3 +59,6 @@ class RoleCode(models.Model):
 
 class Report(models.Model):
     delivered = models.IntegerField(default=0)
+
+    def __str__(self) -> str:
+        return str(self.delivered)
