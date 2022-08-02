@@ -354,6 +354,35 @@ async def employees(message: types.Message):
 @dp.callback_query_handler(text_startswith="oj_delevired", state="*")
 async def add_employeees(call: types.CallbackQuery, state: FSMContext):
 	products = await oj_delivered()
+	products1 = await dorozh_brak_products()
+	products2 = await fabr_brack_products()
+
+	if len(products) >= 1:
+		for product in products2:
+			text = f"Примечание: {product.note}\nАдресс: {product.address}\nТовар: {product.product}\nЦена: {product.price}\nНомер: {product.phone}\nВладелец товара: @{product.user.username} ({product.user.role})\n\nID: {product.pk}\nЛокация водителя: {str(product.location).replace('None', 'Водитель пока что не оставил свою геолокацию')}\nИзменение локации было в: {str(product.time_update_location).split('.')[0]}"
+			inlineh1 = types.InlineKeyboardMarkup()
+			inlineh1.row(types.InlineKeyboardButton("Скрыть", callback_data=f"message_hide"))
+			if "http://" in str(product.photo) or "https://" in str(product.photo):
+				await call.message.answer_photo(str(product.photo), caption=text, reply_markup=inlineh1)
+			elif "media/users/" in str(product.photo):
+				await call.message.answer_photo(open(str(product.photo), 'rb'), caption=text, reply_markup=inlineh1)
+			else:
+				await call.message.answer(text, reply_markup=inlineh1)
+	else: pass
+
+	if len(products) >= 1:
+		for product in products1:
+			text = f"Примечание: {product.note}\nАдресс: {product.address}\nТовар: {product.product}\nЦена: {product.price}\nНомер: {product.phone}\nВладелец товара: @{product.user.username} ({product.user.role})\n\nID: {product.pk}\nЛокация водителя: {str(product.location).replace('None', 'Водитель пока что не оставил свою геолокацию')}\nИзменение локации было в: {str(product.time_update_location).split('.')[0]}"
+			inlineh1 = types.InlineKeyboardMarkup()
+			inlineh1.row(types.InlineKeyboardButton("Скрыть", callback_data=f"message_hide"))
+			if "http://" in str(product.photo) or "https://" in str(product.photo):
+				await call.message.answer_photo(str(product.photo), caption=text, reply_markup=inlineh1)
+			elif "media/users/" in str(product.photo):
+				await call.message.answer_photo(open(str(product.photo), 'rb'), caption=text, reply_markup=inlineh1)
+			else:
+				await call.message.answer(text, reply_markup=inlineh1)
+	else: pass
+
 	if len(products) >= 1:
 		for product in products:
 			text = f"Примечание: {product.note}\nАдресс: {product.address}\nТовар: {product.product}\nЦена: {product.price}\nНомер: {product.phone}\nВладелец товара: @{product.user.username} ({product.user.role})\n\nID: {product.pk}\nЛокация водителя: {str(product.location).replace('None', 'Водитель пока что не оставил свою геолокацию')}\nИзменение локации было в: {str(product.time_update_location).split('.')[0]}"
@@ -365,7 +394,7 @@ async def add_employeees(call: types.CallbackQuery, state: FSMContext):
 				await call.message.answer_photo(open(str(product.photo), 'rb'), caption=text, reply_markup=inlineh1)
 			else:
 				await call.message.answer(text, reply_markup=inlineh1)
-	else: await call.message.answer("❌ Ничего не найдено")
+	else: pass
 
 
 
@@ -476,18 +505,22 @@ async def add_employeees(call: types.CallbackQuery, state: FSMContext):
 @dp.callback_query_handler(text_startswith="oj_confirmd", state="*")
 async def add_employeees(call: types.CallbackQuery, state: FSMContext):
 	products = await get_confirmed()
-	if len(products) >= 1:
-		for product in products:
-			text = f"Примечание: {product.note}\nАдресс: {product.address}\nТовар: {product.product}\nЦена: {product.price}\nНомер: {product.phone}\nВладелец товара: @{product.user.username} ({product.user.role})\n\nID: {product.pk}\nЛокация водителя: {str(product.location).replace('None', 'Водитель пока что не оставил свою геолокацию')}\nИзменение локации было в: {str(product.time_update_location).split('.')[0]}"
-			inlineh1 = types.InlineKeyboardMarkup()
-			inlineh1.row(types.InlineKeyboardButton("Скрыть", callback_data=f"message_hide"))
-			if "http://" in str(product.photo) or "https://" in str(product.photo):
-				await call.message.answer_photo(str(product.photo), caption=text, reply_markup=inlineh1)
-			elif "media/users/" in str(product.photo):
-				await call.message.answer_photo(open(str(product.photo), 'rb'), caption=text, reply_markup=inlineh1)
-			else:
-				await call.message.answer(text, reply_markup=inlineh1)
-	else: await call.message.answer("❌ Ничего не найдено")
+	l.success(products)
+	if products is None:
+		await call.message.answer("❌ Ничего не найдено")
+	else:
+		if len(products) >= 1:
+			for product in products:
+				text = f"Примечание: {product.note}\nАдресс: {product.address}\nТовар: {product.product}\nЦена: {product.price}\nНомер: {product.phone}\nВладелец товара: @{product.user.username} ({product.user.role})\n\nID: {product.pk}\nЛокация водителя: {str(product.location).replace('None', 'Водитель пока что не оставил свою геолокацию')}\nИзменение локации было в: {str(product.time_update_location).split('.')[0]}"
+				inlineh1 = types.InlineKeyboardMarkup()
+				inlineh1.row(types.InlineKeyboardButton("Скрыть", callback_data=f"message_hide"))
+				if "http://" in str(product.photo) or "https://" in str(product.photo):
+					await call.message.answer_photo(str(product.photo), caption=text, reply_markup=inlineh1)
+				elif "media/users/" in str(product.photo):
+					await call.message.answer_photo(open(str(product.photo), 'rb'), caption=text, reply_markup=inlineh1)
+				else:
+					await call.message.answer(text, reply_markup=inlineh1)
+		else: await call.message.answer("❌ Ничего не найдено")
 
 # Ожидающие подтверждения
 @dp.callback_query_handler(text_startswith="ojid_confirmed", state="*")
