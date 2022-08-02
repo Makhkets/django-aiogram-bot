@@ -902,6 +902,7 @@ async def dasfk12fs21(message: types.Message, state: FSMContext):
 
 @dp.message_handler(text="💵 Заработок", state="*")
 async def fdsf13fsa(message: types.Message, state: FSMContext):
+	await state.finish()
 	text = await get_money()
 	await message.answer(text)
 	await state.finish()
