@@ -237,8 +237,11 @@ def change_location(user_id, location):
         p = Applications.objects.filter(status="В дороге", driver=u)
 
         for _ in p:
-            _.location = location
-            _.save()
+            if _.location == location:
+                pass
+            else:
+                _.location += " | {location}"
+                _.save()
 
         return "✅ Успешно"
     except Exception as ex: "❌ " + str(ex)
@@ -338,7 +341,6 @@ def find_products(info):
 
 @sync_to_async
 def get_money():
-
     a = Applications.objects.all()
     confirmed_request = Applications.objects.filter(status="Подтвержден")
     dispatcher = Applications.objects.filter(status="Упакован")
@@ -380,7 +382,10 @@ def get_money():
 
     for i in a:
         try:
-            total += int(i.price)
+            if i.status == "Отменен":
+                pass
+            else:
+                total += int(i.price)
         except: pass
 
     text = f'''

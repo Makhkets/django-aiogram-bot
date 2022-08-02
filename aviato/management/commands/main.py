@@ -193,9 +193,9 @@ async def dasdasdsa2(message: types.Message, state: FSMContext):
 			await message.answer("❌ Такой пользоватлеь не найден")
 		else:
 			inlineh1 = types.InlineKeyboardMarkup()
-			inlineh1.row(types.InlineKeyboardButton("Админ", callback_data=f"remove_admin:{user.user_id}"), types.InlineKeyboardButton("Менеджер", callback_data=f"remove_manager:{user.user_id}"))
-			inlineh1.row(types.InlineKeyboardButton("Оператор", callback_data=f"remove_operator:{user.user_id}"), types.InlineKeyboardButton("Водитель", callback_data=f"remove_driver:{user.user_id}"))
-			inlineh1.row(types.InlineKeyboardButton("Упаковщик", callback_data=f"remove_packer:{user.user_id}"))
+			inlineh1.row(types.InlineKeyboardButton("🛡️ Админ", callback_data=f"remove_admin:{user.user_id}"), types.InlineKeyboardButton("⭐ Менеджер", callback_data=f"remove_manager:{user.user_id}"))
+			inlineh1.row(types.InlineKeyboardButton("👨‍💻 Оператор", callback_data=f"remove_operator:{user.user_id}"), types.InlineKeyboardButton("🔧 Водитель", callback_data=f"remove_driver:{user.user_id}"))
+			inlineh1.row(types.InlineKeyboardButton("⚙️ Упаковщик", callback_data=f"remove_packer:{user.user_id}"))
 			await message.answer(f"Имя: @{user.username}\nID: {user.user_id}\nРоль: {user.role}\n\nВыберите роль для пользователя", reply_markup=inlineh1)
 	else: await message.answer("❌ Неравильно введен ID")
 	await state.finish()

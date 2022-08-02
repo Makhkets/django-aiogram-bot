@@ -57,9 +57,9 @@ def employees_inline_menu():
 
 def employees_role_inline():
     inline_kb_full = types.InlineKeyboardMarkup()
-    inline_kb_full.row(types.InlineKeyboardButton("Админ", callback_data="admin_code"), types.InlineKeyboardButton("Менеджер", callback_data="manager_code"))
-    inline_kb_full.row(types.InlineKeyboardButton("Оператор", callback_data="operator_code"), types.InlineKeyboardButton("Водитель", callback_data="driver_code"))
-    inline_kb_full.row(types.InlineKeyboardButton("Упаковщик", callback_data="packer_code"))
+    inline_kb_full.row(types.InlineKeyboardButton("🛡️ Админ", callback_data="admin_code"), types.InlineKeyboardButton("⭐ Менеджер", callback_data="manager_code"))
+    inline_kb_full.row(types.InlineKeyboardButton("👨‍💻 Оператор", callback_data="operator_code"), types.InlineKeyboardButton("🔧 Водитель", callback_data="driver_code"))
+    inline_kb_full.row(types.InlineKeyboardButton("⚙️ Упаковщик", callback_data="packer_code"))
 
     return inline_kb_full
 
