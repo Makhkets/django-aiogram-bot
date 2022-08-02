@@ -1,4 +1,5 @@
 
+from re import T
 from asgiref.sync import sync_to_async
 from loguru import logger as l
 
@@ -352,22 +353,35 @@ def get_money():
     total_disp_pack_driv = 0
 
     for dr in driver:
-        total_disp_pack_driv += int(dr.price)
-        total_driver += int(dr.price)
+        try:
+            total_disp_pack_driv += int(dr.price)
+            total_driver += int(dr.price)
+        except: 
+            pass
 
     for p in packer:
-        total_disp_pack_driv += int(p.price)
-        total_packer += int(p.price)
+        try:
+            total_disp_pack_driv += int(p.price)
+            total_packer += int(p.price)
+        except: pass
+        
 
     for d in dispatcher:
-        total_disp_pack_driv += int(d.price)
-        total_dispatcher += int(d.price)
+        try:
+            total_disp_pack_driv += int(d.price)
+            total_dispatcher += int(d.price)
+        except: pass
 
+    
     for i in confirmed_request:
-        total_confirmed += int(i.price)
+        try:
+            total_confirmed += int(i.price)
+        except: pass
 
     for i in a:
-        total += int(i.price)
+        try:
+            total += int(i.price)
+        except: pass
 
     text = f'''
 Итого 2,5% - <b>{round(total / 100 * 2.5, 10)} Рублей</b>
