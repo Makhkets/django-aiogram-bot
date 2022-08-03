@@ -339,12 +339,12 @@ async def employees(message: types.Message):
 	user = await get_user_or_create(user_id=str(message.from_user.id))
 
 	inlineh1 = types.InlineKeyboardMarkup()
-	inlineh1.row(types.InlineKeyboardButton("Ожидающие подтверждения", callback_data="ojid_confirmed"))
-	inlineh1.row(types.InlineKeyboardButton("Подтвержденные", callback_data="oj_confirmd"), types.InlineKeyboardButton("Отмененные", callback_data="oj_canceled"))
-	inlineh1.row(types.InlineKeyboardButton("Переданные Упаковщику", callback_data="oj_packer"))
-	inlineh1.row(types.InlineKeyboardButton("Переданные диспетчеру", callback_data="oj_dispatcher"), types.InlineKeyboardButton("В дороге", callback_data="oj_drive"))
-	inlineh1.row(types.InlineKeyboardButton("Дорожный брак", callback_data="oj_dorozh_brak"), types.InlineKeyboardButton("Фабричный брак", callback_data="oj_fabr_brak"))
-	inlineh1.row(types.InlineKeyboardButton("Доставлено", callback_data="oj_delevired"))
+	inlineh1.row(types.InlineKeyboardButton("📫 Ожидающие подтверждения", callback_data="ojid_confirmed"))
+	inlineh1.row(types.InlineKeyboardButton("📮 Подтвержденные", callback_data="oj_confirmd"), types.InlineKeyboardButton("📪 Отмененные", callback_data="oj_canceled"))
+	inlineh1.row(types.InlineKeyboardButton("👷‍♂️ Переданные Упаковщику", callback_data="oj_packer"))
+	inlineh1.row(types.InlineKeyboardButton("👨‍💻 Переданные диспетчеру", callback_data="oj_dispatcher"), types.InlineKeyboardButton("🚗 В дороге", callback_data="oj_drive"))
+	inlineh1.row(types.InlineKeyboardButton("❌ Дорожный брак", callback_data="oj_dorozh_brak"), types.InlineKeyboardButton("❌ Фабричный брак", callback_data="oj_fabr_brak"))
+	inlineh1.row(types.InlineKeyboardButton("✅ Доставлено", callback_data="oj_delevired"))
 
 	await message.answer(answer, reply_markup=inlineh1)
 	await cloud()
