@@ -28,6 +28,7 @@ class Applications(models.Model):
     price = models.CharField(max_length=100000, verbose_name="Цена")
     photo = models.ImageField(upload_to="images/%Y/%m/%d", verbose_name="Фото", blank=True, null=True)
     phone = models.CharField(max_length=100, verbose_name="Номер телефона")
+    direction = models.CharField(max_length=400, verbose_name="Направление", null=True, blank=True)
     canceled_reason = models.CharField(max_length=3000, verbose_name="Причина отмены заказа", blank=True, null=True)
     user = models.ForeignKey(Profile, on_delete=models.PROTECT, verbose_name="Пользователь который добавил товар")
     create_time = models.DateTimeField(auto_now=True, verbose_name="Время создании заявки")
@@ -56,9 +57,3 @@ class RoleCode(models.Model):
         verbose_name = "Коды"
         verbose_name_plural = "Коды"
 
-
-class Report(models.Model):
-    delivered = models.IntegerField(default=0)
-
-    def __str__(self) -> str:
-        return str(self.delivered)

@@ -42,6 +42,8 @@ class D(StatesGroup):
 	remake_request = State()
 	edit_product = State()
 
+	dist = State()
+
 async def get_menu(message):
 	user = await get_user_or_create(user_id=str(message.from_user.id), username=message.from_user.username)
 
@@ -268,7 +270,7 @@ async def code(message: types.Message, state: FSMContext):
 
 @dp.message_handler(text="✍ Добавить заявку", state="*")
 async def userrequests(message: types.Message):
-	await message.answer("🖋 Заполните и отправьте следующий шаблон\n\nПримечание\nТовар\nАдрес\nНомер\nЦена\nФото\n\nЧтобы отменить загрузку товара напишите /start")
+	await message.answer("🖋 Заполните и отправьте следующий шаблон\n\nПримечание\nТовар\nАдрес\nНомер (только цифры)\nЦена (число)\nФото\n\nЧтобы отменить загрузку товара напишите /start")
 	await D.note.set()
 	await cloud()
 
@@ -354,34 +356,6 @@ async def employees(message: types.Message):
 @dp.callback_query_handler(text_startswith="oj_delevired", state="*")
 async def add_employeees(call: types.CallbackQuery, state: FSMContext):
 	products = await oj_delivered()
-	products1 = await dorozh_brak_products()
-	products2 = await fabr_brack_products()
-
-	if len(products) >= 1:
-		for product in products2:
-			text = f"Примечание: {product.note}\nАдресс: {product.address}\nТовар: {product.product}\nЦена: {product.price}\nНомер: {product.phone}\nВладелец товара: @{product.user.username} ({product.user.role})\n\nID: {product.pk}\nЛокация водителя: {str(product.location).replace('None', 'Водитель пока что не оставил свою геолокацию')}\nИзменение локации было в: {str(product.time_update_location).split('.')[0]}"
-			inlineh1 = types.InlineKeyboardMarkup()
-			inlineh1.row(types.InlineKeyboardButton("Скрыть", callback_data=f"message_hide"))
-			if "http://" in str(product.photo) or "https://" in str(product.photo):
-				await call.message.answer_photo(str(product.photo), caption=text, reply_markup=inlineh1)
-			elif "media/users/" in str(product.photo):
-				await call.message.answer_photo(open(str(product.photo), 'rb'), caption=text, reply_markup=inlineh1)
-			else:
-				await call.message.answer(text, reply_markup=inlineh1)
-	else: pass
-
-	if len(products) >= 1:
-		for product in products1:
-			text = f"Примечание: {product.note}\nАдресс: {product.address}\nТовар: {product.product}\nЦена: {product.price}\nНомер: {product.phone}\nВладелец товара: @{product.user.username} ({product.user.role})\n\nID: {product.pk}\nЛокация водителя: {str(product.location).replace('None', 'Водитель пока что не оставил свою геолокацию')}\nИзменение локации было в: {str(product.time_update_location).split('.')[0]}"
-			inlineh1 = types.InlineKeyboardMarkup()
-			inlineh1.row(types.InlineKeyboardButton("Скрыть", callback_data=f"message_hide"))
-			if "http://" in str(product.photo) or "https://" in str(product.photo):
-				await call.message.answer_photo(str(product.photo), caption=text, reply_markup=inlineh1)
-			elif "media/users/" in str(product.photo):
-				await call.message.answer_photo(open(str(product.photo), 'rb'), caption=text, reply_markup=inlineh1)
-			else:
-				await call.message.answer(text, reply_markup=inlineh1)
-	else: pass
 
 	if len(products) >= 1:
 		for product in products:
@@ -560,10 +534,20 @@ async def employees(message: types.Message):
 
 @dp.callback_query_handler(text_startswith="confirmed_request", state="*")
 async def add_employeees(call: types.CallbackQuery, state: FSMContext):
+	await call.message.delete()
 	product_id = call.data.split(":")[1]
-	text = await product_pack(product_id=product_id)
-	await get_menu_call(call)
-	await call.message.answer(text)
+	await state.update_data(product_id=product_id)
+	await call.message.answer("✍ Введите направление: ")
+	await D.dist.set()
+
+@dp.message_handler(state=D.dist)
+async def add_employe(message: types.Message, state: FSMContext):
+	dist = message.text
+	data = await state.get_data()
+	text = await product_pack(product_id=data["product_id"], dist=dist)
+	await get_menu(message)
+	await message.answer(text)
+	await state.finish()
 	await cloud()
 
 @dp.message_handler(text="⚡ Неупокованные заказы", state="*")
@@ -571,7 +555,7 @@ async def employees(message: types.Message):
 	products = await get_pack_products()
 	if len(products) >= 1:
 		for product in products:
-			text = f"Примечание: {product.note}\nАдресс: {product.address}\nТовар: {product.product}\nЦена: {product.price}\nНомер: {product.phone}\nВладелец товара: @{product.user.username} ({product.user.role})\n\nID: {product.pk}\nЛокация водителя: {str(product.location).replace('None', 'Водитель пока что не оставил свою геолокацию')}\nИзменение локации было в: {str(product.time_update_location).split('.')[0]}"
+			text = f"ID: {product.pk}\nНаправление: {product.direction}\nАдресс: {product.address}\nТовар: {product.product}\n"
 			inlineh1 = types.InlineKeyboardMarkup()
 			inlineh1.row(types.InlineKeyboardButton("✅ Заказ упакован", callback_data=f"confirmed2_request:{product.pk}"))
 			if "http://" in str(product.photo) or "https://" in str(product.photo):
@@ -691,23 +675,6 @@ async def employees(message: types.Message, state: FSMContext):
 	await message.answer(text, reply_markup=inlineh1)
 	await cloud()
 
-@dp.message_handler(text="🕓 Заказы водителя", state="*")
-async def employees(message: types.Message):
-	products = await pack_to_drive()
-	if len(products) >= 1:
-		for product in products:
-			text = f"Примечание: {product.note}\nАдресс: {product.address}\nТовар: {product.product}\nЦена: {product.price}\nНомер: {product.phone}\nВладелец товара: @{product.user.username} ({product.user.role})\n\nID: {product.pk}\nЛокация водителя: {str(product.location).replace('None', 'Водитель пока что не оставил свою геолокацию')}\nИзменение локации было в: {str(product.time_update_location).split('.')[0]}"
-			inlineh1 = types.InlineKeyboardMarkup()
-			inlineh1.row(types.InlineKeyboardButton("✅ Принять заказ на доставку", callback_data=f"confirmed_drive_request:{product.pk}"))
-			if "http://" in str(product.photo) or "https://" in str(product.photo):
-				await message.answer_photo(str(product.photo), caption=text, reply_markup=inlineh1)
-			elif "media/users/" in str(product.photo):
-				await message.answer_photo(open(str(product.photo), 'rb'), caption=text, reply_markup=inlineh1)
-			else:
-				await message.answer(text, reply_markup=inlineh1)
-	else: await message.answer("Пока нет упакованных заявок.")
-	await cloud()
-
 @dp.message_handler(text="📢 Логистика", state="*")
 async def employees(message: types.Message):
 	products = await pack_to_logist()
@@ -788,8 +755,8 @@ async def employees(message: types.Message, state: FSMContext):
 		products = await find_products(info=message.text)
 		for product in products:
 			inlineh1 = types.InlineKeyboardMarkup()
-			inlineh1.row(types.InlineKeyboardButton(f"Фабричный брак", callback_data=f"product_brak_f:{product.pk}"),
-						 types.InlineKeyboardButton(f"Дорожный брак", callback_data=f"product_brak_d:{product.pk}"))
+			inlineh1.row(types.InlineKeyboardButton(f"✨ Фабричный брак", callback_data=f"product_brak_f:{product.pk}"),
+						 types.InlineKeyboardButton(f"✨ Дорожный брак", callback_data=f"product_brak_d:{product.pk}"))
 			inlineh1.row(types.InlineKeyboardButton(f"Скрыть", callback_data="message_hide"))
 
 			text = f"Примечание: {product.note}\nАдресс: {product.address}\nТовар: {product.product}\nЦена: {product.price}\nНомер: {product.phone}\nВладелец товара: @{product.user.username} ({product.user.role})\n\nID: {product.pk}\nЛокация водителя: {str(product.location).replace('None', 'Водитель пока что не оставил свою геолокацию')}\nИзменение локации было в: {str(product.time_update_location).split('.')[0]}"
@@ -814,7 +781,7 @@ async def add_employeees(call: types.CallbackQuery, state: FSMContext):
 	product_id = call.data.split(":")[1]
 	await D.match3.set()
 	await state.update_data(product_id=product_id)
-	await call.message.answer("Отправьте сообщениее по следующему шаблону\n\nТовар\nНовая цена")
+	await call.message.answer("Отправьте сообщениее по следующему шаблону\n\nНовый товар\nНовая Цена (в цифрах)\nСтарый Товар\nСтарая Цена (в цифрах)")
 	await cloud()
 
 @dp.message_handler(state=D.match3)
@@ -824,9 +791,16 @@ async def employees(message: types.Message, state: FSMContext):
 
 	product_title = data[0]
 	product_price = data[1]
+
+	product_title2 = data[2]
+	product_price2 = data[3]
+
+	l.success(f"{product_title} , {product_price} | {product_title2} , {product_price2}")
+
+
 	product_id = _["product_id"]
 
-	text = await product_match(title=product_title, price=product_price, product_id=product_id, status="Дорожный брак")
+	text = await product_match(title=product_title, price=product_price, title2=product_title2, price2=product_price2, product_id=product_id, status="Дорожный брак")
 	await message.answer(text)
 	await state.finish()
 	await get_menu(message)
@@ -839,7 +813,7 @@ async def add_employeees(call: types.CallbackQuery, state: FSMContext):
 	product_id = call.data.split(":")[1]
 	await D.match2.set()
 	await state.update_data(product_id=product_id)
-	await call.message.answer("Отправьте сообщениее по следующему шаблону\n\nТовар\nНовая цена")
+	await call.message.answer("Отправьте сообщениее по следующему шаблону\n\nНовый товар\nНовая Цена (в цифрах)\nСтарый Товар\nСтарая Цена (в цифрах)")
 	await cloud()
 
 @dp.message_handler(state=D.match2)
@@ -849,9 +823,15 @@ async def employees(message: types.Message, state: FSMContext):
 
 	product_title = data[0]
 	product_price = data[1]
+	
+	product_title2 = data[2]
+	product_price2 = data[3]
+
+	l.success(f"{product_title} , {product_price} | {product_title2} , {product_price2}")
+
 	product_id = _["product_id"]
 
-	text = await product_match(title=product_title, price=product_price, product_id=product_id, status="Фабричный брак")
+	text = await product_match(title=product_title, price=product_price, title2=product_title2, price2=product_price2, product_id=product_id, status="Фабричный брак")
 	await message.answer(text)
 	await state.finish()
 	await get_menu(message)
@@ -871,6 +851,7 @@ async def efdsfsdff(message: types.Message, state: FSMContext):
 	products = await find_products(info=text)
 	if products is None:
 		await message.answer("❌ Не найдено")
+		await state.finish()
 	else:
 		for product in products:
 			inlineh1 = types.InlineKeyboardMarkup()
@@ -878,6 +859,7 @@ async def efdsfsdff(message: types.Message, state: FSMContext):
 			inlineh1.row(types.InlineKeyboardButton(f"♻ Скрыть заявку", callback_data=f"hide_message"))
 			text = f"Примечание: {product.note}\nАдресс: {product.address}\nТовар: {product.product}\nЦена: {product.price}\nНомер: {product.phone}\nВладелец товара: @{product.user.username} ({product.user.role})\n\nID: {product.pk}\nЛокация водителя: {str(product.location).replace('None', 'Водитель пока что не оставил свою геолокацию')}\nИзменение локации было в: {str(product.time_update_location).split('.')[0]}"
 			await message.answer(text, reply_markup=inlineh1)
+			await state.finish()
 
 @dp.callback_query_handler(text_startswith="hide_message", state="*")
 async def fdfdsfd13(call: types.CallbackQuery, state: FSMContext):
@@ -889,7 +871,7 @@ async def fdfdsfd13(call: types.CallbackQuery, state: FSMContext):
 async def fdsf31fkx1(call: types.CallbackQuery, state: FSMContext):
 	product_id = call.data.split(":")[1]
 	await state.update_data(product_id=product_id)
-	await call.message.answer("Заполните следующий шаблон:\n\n🖋 Заполните и отправьте следующий шаблон\n\nПримечание\nАдрес\nТовар\nЦена\nНомер\nФото\n\nЧтобы отменить загрузку товара напишите /start")
+	await call.message.answer("Заполните следующий шаблон:\n\n🖋 Заполните и отправьте следующий шаблон\n\nПримечание\nАдрес\nТовар\nЦена (число)\nНомер (только цифры)\nФото (ссылка)\n\nЧтобы отменить загрузку товара напишите /start")
 	await D.edit_product.set()
 
 @dp.message_handler(state=D.edit_product)

@@ -129,7 +129,7 @@ def get_pack_products():
 
 @sync_to_async
 def pack_to_drive():
-    return Applications.objects.filter(status="")
+    return Applications.objects.filter(status="В дороге")
 
 @sync_to_async
 def pack_to_logist():
@@ -158,14 +158,13 @@ def product_pack_conf(product_id):
 @sync_to_async
 def report_info():
     try:
-        r = Report.objects.get(pk=1)
         expectation = Applications.objects.filter(status="Ожидание подтверждения").count()
         confirmed = Applications.objects.filter(status="Подтвержден").count()
         canceled = Applications.objects.filter(status="Отменен").count()
         transferred = Applications.objects.filter(status="Передан упаковщику").count()
         transferred_dispatcher = Applications.objects.filter(status="Упакован").count()
         drive = Applications.objects.filter(status="В дороге").count()
-        delivered = Applications.objects.filter(status="Доставлен").count() + int(r.delivered)
+        delivered = Applications.objects.filter(status="Доставлен").count()
         matchs = Applications.objects.filter(status="Фабричный брак").count()
         matchs2 = Applications.objects.filter(status="Дорожный брак").count()
 
@@ -194,10 +193,11 @@ def confirm_product(product_id):
     except Exception as ex: return "❌ " + str(ex)
 
 @sync_to_async
-def product_pack(product_id):
+def product_pack(product_id, dist):
     try:
         p = Applications.objects.get(pk=product_id)
         p.status = "Передан упаковщику"
+        p.direction = dist
         p.save()
         return f"✅ Товар <b>№{p.pk}</b> Отправлен на Упаковку"
     except Exception as ex: return "❌ " + ex
@@ -229,22 +229,31 @@ def delivered(product_id):
 
 @sync_to_async
 def change_location(user_id, location):
-    try:
-        data = location.split(",")
-        location = f"{data[-1]}, {data[5]}, {data[7]}"
+    # try:
+    data = location.split(",")
+    location = f"{data[-1]}, {data[5]}, {data[7]}"
 
-        u = Profile.objects.get(user_id=user_id)
-        p = Applications.objects.filter(status="В дороге", driver=u)
+    u = Profile.objects.get(user_id=user_id)
+    p = Applications.objects.filter(status="В дороге", driver=u)
 
-        for _ in p:
-            if _.location == location:
+    
+    for _ in p:
+        try:
+            if location in _.location:
                 pass
             else:
-                _.location += " | {location}"
-                _.save()
+                if _.location is None:
+                    _.location = location
+                    _.save()
+                else:
+                    _.location += f" | {location}"
+                    _.save()
+        except: 
+            _.location = location
+            _.save()
 
-        return "✅ Успешно"
-    except Exception as ex: "❌ " + str(ex)
+    return "✅ Успешно"
+    # except Exception as ex: return "❌ " + str(ex)
 
 @sync_to_async
 def applications_drivers():
@@ -295,11 +304,14 @@ def driver_confrimed(user, product):
 
 
 @sync_to_async
-def product_match(title, price, product_id, status):
+def product_match(title, price, title2, price2, product_id, status):
     try:
         p = Applications.objects.get(pk=product_id)
         p.status = status
+        p.product = title2
+        p.price = price2
         p.save()
+#
         Applications.objects.create(
             note=p.note,
             address=p.address,
@@ -308,12 +320,21 @@ def product_match(title, price, product_id, status):
             price=price,
             photo=p.photo,
             user=p.user,
-            status="Упакован",
+            status="Передан упаковщику",
+        )
+#
+        Applications.objects.create(
+            note=p.note,
+            address=p.address,
+            product=title2,
+            phone=p.phone,
+            price=price2,
+            photo=p.photo,
+            user=p.user,
+            status="Доставлен",
         )
 
-        r = Report.objects.get(pk=1)
-        r.delivered += 1
-        r.save()
+
 
         return "✅ Успешно"
     except Exception as ex: return "❌ " + str(ex)
@@ -329,15 +350,17 @@ def get_operators():
 
 @sync_to_async
 def find_products(info):
-    p = Applications.objects.filter(pk=info)
-    if len(p) >= 1:
-        return p
-    
-    p = Applications.objects.filter(phone=info)
-    if len(p) >= 1:
-        return p
+    try:
+        p = Applications.objects.filter(pk=info)
+        if len(p) >= 1:
+            return p
+        
+        p = Applications.objects.filter(phone=info)
+        if len(p) >= 1:
+            return p
 
-    return None
+        return None
+    except: return None
 
 @sync_to_async
 def get_money():
@@ -382,15 +405,16 @@ def get_money():
 
     for i in a:
         try:
-            if i.status == "Отменен":
+            if i.status == "Отменен" or i.status == "Фабричный брак" or i.status == "Дорожный брак":
                 pass
             else:
                 total += int(i.price)
         except: pass
 
+
     text = f'''
 Итого 2,5% - <b>{round(total / 100 * 2.5, 10)} Рублей</b>
-Объем, ₽ (Подтвержденные) - <b>{round(total_confirmed, 10)} Рублей</b>
+Объем, ₽ (Подтвержденные) - <b>{round(total, 10)} Рублей</b>
 Общий объем диспетчера, упаковщика, водителя ₽ - <b>{round(total_disp_pack_driv, 10)} Рублей</b>
 Объем у диспетчера, ₽ - <b>{round(total_dispatcher, 10)} Рублей</b>
 Объем у упаковщика, ₽ - <b>{round(total_packer, 10)} Рублей</b>

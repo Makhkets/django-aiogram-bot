@@ -39,14 +39,14 @@ def index(request):
 
 def data(request, id):
     id_or_phone = id
-
     try:
         p = Applications.objects.get(pk=id_or_phone)
         logger.critical(p)
         if p:
             return JsonResponse({
                 "products": p.product,
-                "note": p.note,
+                "address": p.address,
+                "time_update_location": p.time_update_location,
                 "price": p.price,
                 "location": p.location,
                 "phone": p.phone,
@@ -57,13 +57,13 @@ def data(request, id):
 
     p = Applications.objects.filter(phone=id_or_phone)
 
-
     if len(p) >= 1:
         data = []
         for i in p:
             data.append({
                 "products": str(i.product),
-                "note": str(i.note),
+                "address": str(i.address),
+                "time_update_location": str(i.time_update_location),
                 "price": str(i.price),
                 "location": str(i.location),
                 "phone": str(i.phone),
