@@ -617,13 +617,19 @@ async def employees(message: types.Message):
 	ua = UserAgent()
 	random_user_agent = ua.random
 	locator = Nominatim(user_agent=random_user_agent)
-	address = locator.reverse(f'{latitude}, {longitude}')
+	location = locator.reverse(f'{latitude}, {longitude}')
 
 	admin_list = await admins_list()
+
 	for admin in admin_list:
 		await bot.send_message(admin.user_id, "✅ Водитель обновил свою геолокацию")
 
-	text = address.address
+	
+	city = location.raw["address"]["city"]
+	region = location.raw["address"]["state"]
+
+	text = f"{city}, {region}"
+	l.success(text)
 	text1 = await change_location(user_id=message.from_user.id, location=text)
 	await get_menu(message)
 	await message.answer(text1)

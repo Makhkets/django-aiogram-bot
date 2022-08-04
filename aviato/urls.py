@@ -1,9 +1,20 @@
 from django.urls import path
 from django.http import HttpResponse, JsonResponse
 from django.shortcuts import render
+from django.core.serializers.json import DjangoJSONEncoder
+from django.http import JsonResponse
+
 from .forms import Geo
-from loguru import logger
 from .models import Applications
+
+from loguru import logger
+
+
+class MyJsonResponse(JsonResponse):
+    def __init__(self, data, encoder=DjangoJSONEncoder, safe=True, **kwargs):
+        json_dumps_params = dict(ensure_ascii=False)
+        super().__init__(data, encoder, safe, json_dumps_params, **kwargs)
+
 
 def index(request):
     if request.method == "POST":
@@ -43,7 +54,7 @@ def data(request, id):
         p = Applications.objects.get(pk=id_or_phone)
         if p:
             if p.status == "В дороге":
-                return JsonResponse({
+                return MyJsonResponse({
                     "products": p.product,
                     "address": p.address,
                     "status": "Ваш товар в дороге!",
@@ -54,7 +65,7 @@ def data(request, id):
                     "id": p.pk,
                 }, safe=False)
             else:
-                return JsonResponse({
+                return MyJsonResponse({
                     "products": p.product,
                     "address": p.address,
                     "status": "Ваш товар подготавливается к отправке!",
@@ -77,16 +88,18 @@ def data(request, id):
             data.append({
                 "products": str(i.product),
                 "address": str(i.address),
-                "time_update_location": str(i.time_update_location),
+                "last_time_update_location": str(i.time_update_location),
+                "time_locations": str(i.location_time).split("|"),
                 "price": str(i.price),
-                "location": str(i.location),
+                "locations": str(i.location).split("|"),
+                "last_location": str(i.location).split("|")[-1],
                 "phone": str(i.phone),
                 "id": str(i.pk),
             })
 
-        return JsonResponse(data, safe=False)
+        return MyJsonResponse(data, safe=False)
 
-    return JsonResponse({
+    return MyJsonResponse({
         "message": "Error, product not finded"
     })
 

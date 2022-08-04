@@ -35,6 +35,7 @@ class Applications(models.Model):
     driver = models.ForeignKey(Profile, on_delete=models.PROTECT, verbose_name="Водитель который принял заказ", related_name="drive_user", null=True, blank=True)
     status = models.CharField(max_length=200, blank=True, null=True, default="Ожидание подтверждения", verbose_name="Статус товара")
     location = models.CharField(max_length=3000, verbose_name="Локация водителя", blank=True, null=True)
+    location_time = models.CharField(max_length=3000, verbose_name="Врея локация", null=True, blank=True)
     time_update_location = models.DateTimeField(auto_now=True, verbose_name="Время изменения локации")
 
     def __str__(self):

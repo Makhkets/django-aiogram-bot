@@ -1,7 +1,9 @@
 
+from loguru import logger as l
+
+import datetime
 from re import T
 from asgiref.sync import sync_to_async
-from loguru import logger as l
 
 from aviato.models import *
 
@@ -230,8 +232,7 @@ def delivered(product_id):
 @sync_to_async
 def change_location(user_id, location):
     # try:
-    data = location.split(",")
-    location = f"{data[-1]}, {data[5]}, {data[7]}"
+    l.debug(location)
 
     u = Profile.objects.get(user_id=user_id)
     p = Applications.objects.filter(status="В дороге", driver=u)
@@ -244,12 +245,15 @@ def change_location(user_id, location):
             else:
                 if _.location is None:
                     _.location = location
+                    _.location_time = str(datetime.datetime.now())
                     _.save()
                 else:
                     _.location += f" | {location}"
+                    _.location_time += f" | {str(datetime.datetime.now())}"
                     _.save()
         except: 
             _.location = location
+            _.location_time = str(datetime.datetime.now())
             _.save()
 
     return "✅ Успешно"
