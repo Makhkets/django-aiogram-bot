@@ -479,7 +479,6 @@ async def add_employeees(call: types.CallbackQuery, state: FSMContext):
 @dp.callback_query_handler(text_startswith="oj_confirmd", state="*")
 async def add_employeees(call: types.CallbackQuery, state: FSMContext):
 	products = await get_confirmed()
-	l.success(products)
 	if products is None:
 		await call.message.answer("❌ Ничего не найдено")
 	else:
@@ -845,7 +844,7 @@ async def employees(message: types.Message, state: FSMContext):
 
 
 
-@dp.message_handler(text="🌏 Редактировать заявку", state="*")
+@dp.message_handler(text="🌏 Поиск заявок", state="*")
 async def employees(message: types.Message, state: FSMContext):
 	await message.answer("Введите ID заказа или номер телефона")
 	await cloud()

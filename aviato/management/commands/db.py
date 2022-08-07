@@ -231,33 +231,31 @@ def delivered(product_id):
 
 @sync_to_async
 def change_location(user_id, location):
-    # try:
-    l.debug(location)
+    try:
+        u = Profile.objects.get(user_id=user_id)
+        p = Applications.objects.filter(status="В дороге", driver=u)
 
-    u = Profile.objects.get(user_id=user_id)
-    p = Applications.objects.filter(status="В дороге", driver=u)
-
-    
-    for _ in p:
-        try:
-            if location in _.location:
-                pass
-            else:
-                if _.location is None:
-                    _.location = location
-                    _.location_time = str(datetime.datetime.now())
-                    _.save()
+        
+        for _ in p:
+            try:
+                if location in _.location:
+                    pass
                 else:
-                    _.location += f" | {location}"
-                    _.location_time += f" | {str(datetime.datetime.now())}"
-                    _.save()
-        except: 
-            _.location = location
-            _.location_time = str(datetime.datetime.now())
-            _.save()
+                    if _.location is None:
+                        _.location = location
+                        _.location_time = str(datetime.datetime.now())
+                        _.save()
+                    else:
+                        _.location += f" | {location}"
+                        _.location_time += f" | {str(datetime.datetime.now())}"
+                        _.save()
+            except: 
+                _.location = location
+                _.location_time = str(datetime.datetime.now())
+                _.save()
 
-    return "✅ Успешно"
-    # except Exception as ex: return "❌ " + str(ex)
+        return "✅ Успешно"
+    except Exception as ex: return "❌ " + str(ex)
 
 @sync_to_async
 def applications_drivers():
@@ -433,7 +431,7 @@ def get_ojid_confirmed():
 
 @sync_to_async
 def get_confirmed():
-    Applications.objects.filter(status="Подтвержден")
+    return Applications.objects.filter(status="Подтвержден")
 
 @sync_to_async
 def get_canceled():
