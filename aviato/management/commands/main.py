@@ -896,6 +896,9 @@ async def fdsf13fsa(message: types.Message, state: FSMContext):
 	await cloud()
 
 
+@dp.message_handler(commands=['backup'], state="*")
+async def start(message: types.Message, state: FSMContext):
+	await message.reply_document(open('db.sqlite3', 'rb'))
 
 
 
