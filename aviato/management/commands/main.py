@@ -278,8 +278,8 @@ async def userrequests(message: types.Message):
 async def userrequests(message: types.Message, state: FSMContext):
 	data = message.text.split("\n")
 	text = await product_save(user_id=str(message.from_user.id), data=data)
-	await message.answer(text)
 	await state.finish()
+	await message.answer(text)
 	await cloud()
 
 @dp.message_handler(text="📔 Заявки", state="*")

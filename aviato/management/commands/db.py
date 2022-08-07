@@ -357,7 +357,7 @@ def find_products(info):
         if len(p) >= 1:
             return p
         
-        p = Applications.objects.filter(phone=info)
+        p = Applications.objects.filter(phone__contains=info)
         if len(p) >= 1:
             return p
 
