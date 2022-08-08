@@ -54,7 +54,7 @@ def data(request, id):
         p = Applications.objects.get(pk=id_or_phone)
         if p:
             if p.status == "В дороге":
-                return MyJsonResponse({
+                r = MyJsonResponse({
                     "products": p.product,
                     "address": p.address,
                     "status": "Ваш товар в дороге!",
@@ -64,8 +64,10 @@ def data(request, id):
                     "phone": p.phone,
                     "id": p.pk,
                 }, safe=False)
+                r["Access-Control-Allow-Origin"] = "*"
+                return r
             else:
-                return MyJsonResponse({
+                r = MyJsonResponse({
                     "products": p.product,
                     "address": p.address,
                     "status": "Ваш товар подготавливается к отправке!",
@@ -74,7 +76,9 @@ def data(request, id):
                     "location": p.location,
                     "phone": p.phone,
                     "id": p.pk,
-                }, safe=False)                
+                }, safe=False)
+                r["Access-Control-Allow-Origin"] = "*"
+                return r                
 
 
     except Exception as ex:
@@ -97,7 +101,9 @@ def data(request, id):
                 "id": str(i.pk),
             })
 
-        return MyJsonResponse(data, safe=False)
+        r = MyJsonResponse(data, safe=False)
+        r["Access-Control-Allow-Origin"] = "*"
+        return r
 
     return MyJsonResponse({
         "message": "Error, product not finded"

@@ -223,7 +223,7 @@ async def add_employeees(call: types.CallbackQuery, state: FSMContext):
 @dp.callback_query_handler(text_startswith="remove_operator", state="*")
 async def add_employeees(call: types.CallbackQuery, state: FSMContext):
 	user_id = call.data.split(":")[1]
-	user = await change_role_user(user_id=str(user_id), role="Менеджер")
+	user = await change_role_user(user_id=str(user_id), role="Оператор")
 
 	await get_menu_call(call)
 
