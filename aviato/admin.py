@@ -15,13 +15,18 @@ class ProfileAdmin(admin.ModelAdmin):
         return []
 
 class ApplicationsAdmin(admin.ModelAdmin):
-    list_display = ('id', 'note', 'address', 'phone', 'price', 'time_update_location', 'product', 'user', 'status', 'driver', 'location')
-    search_fields = ['id', 'note', 'address', 'phone', 'price', 'time_update_location', 'product', 'user__first_name', 'status', 'location']
+    list_display = ('id', 'create_time', 'product', 'address', 'price',
+                    'phone', 'status', 'note',
+                    'driver', 'location', "delivery_information", 'bool_status', 'user')
+    search_fields = ['id', 'note', 'address', 'phone', 'price',
+                     'time_update_location', 'product',
+                     'user__first_name', 'status', 'location']
     # list_editable = ('note', 'address', 'phone', 'price', 'product', 'user', 'status', 'driver', "location")
-    list_filter = ('id', 'note', 'phone', 'price', 'time_update_location', 'product', 'user', 'status', 'driver', 'location')
+    list_filter = ('phone', 'time_update_location', 'status',
+                   'driver')
 
     def get_fields(self, request, obj):
-        return ["note", "address", "product", "price", "phone", "photo", "status"]
+        return ["note", "address", "product", "price", "phone", "photo", "status", "bool_status"]
 
     def save_model(self, request, obj, form, change):
         obj.user = Profile.objects.all().first()

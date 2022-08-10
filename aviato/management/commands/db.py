@@ -17,6 +17,10 @@ def get_user_or_create(user_id: str, username=None):
                                       username=username)
 
 @sync_to_async
+def get_all_ojid_check():
+    return Applications.objects.filter(status="Доставлен", checks_document=None)
+
+@sync_to_async
 def get_all_users():
     return Profile.objects.all()
 
@@ -58,11 +62,12 @@ def find_code_and_apply(user_id, code):
 def product_edit(data, product_id):
     try:
         data = data.split("\n")
-        note = data[0].replace("нет", "").replace("Нет", "")
-        address = data[1].replace("нет", "").replace("Нет", "")
-        product = data[2].replace("нет", "").replace("Нет", "")
-        price = data[3].replace("нет", "").replace("Нет", "")
-        phone = data[4].replace("нет", "").replace("Нет", "")
+
+        address = data[0].replace("нет", "").replace("Нет", "")
+        product = data[1].replace("нет", "").replace("Нет", "")
+        price = data[2].replace("нет", "").replace("Нет", "")
+        phone = data[3].replace("нет", "").replace("Нет", "")
+        note = data[4].replace("нет", "").replace("Нет", "")
         photo = ""
 
         if data[5] == "нет" or data[5] == "Нет":
@@ -76,7 +81,7 @@ def product_edit(data, product_id):
         a.product = product
         a.phone = phone
         a.price = price
-        photo=photo
+        a.photo=photo
         a.save()
 
         return "✅ Товар успешно изменен"
@@ -88,11 +93,12 @@ def product_save(user_id, data):
     try:
         user = Profile.objects.get(user_id=str(user_id))
 
-        note = data[0].replace("нет", "").replace("Нет", "")
-        product = data[1].replace("нет", "").replace("Нет", "")
-        address = data[2].replace("нет", "").replace("Нет", "")
-        phone = data[3].replace("нет", "").replace("Нет", "")
-        price = data[4].replace("нет", "").replace("Нет", "")
+
+        product = data[0].replace("нет", "").replace("Нет", "")
+        address = data[1].replace("нет", "").replace("Нет", "")
+        phone = data[2].replace("нет", "").replace("Нет", "")
+        price = data[3].replace("нет", "").replace("Нет", "")
+        note = data[4].replace("нет", "").replace("Нет", "")
         photo = ""
         if data[5] == "нет" or data[5] == "Нет":
             pass
@@ -142,6 +148,7 @@ def delete_product(product_id):
     try:
         a = Applications.objects.get(pk=product_id)
         a.status = "Отменен"
+        a.bool_status = False
         a.save()
         return "✅ Товар успешно отменен"
     except Exception as ex: 
@@ -154,7 +161,7 @@ def product_pack_conf(product_id):
         a = Applications.objects.get(pk=product_id)
         a.status = "Упакован"
         a.save()
-        return "✅ Товар успешно упакован и передан водителю"
+        return "✅ Товар успешно упакован и передан логисту"
     except Exception as ex: return "❌ " + str(ex)     
 
 @sync_to_async
@@ -190,6 +197,7 @@ def confirm_product(product_id):
     try:
         p = Applications.objects.get(pk=product_id)
         p.status = "Подтвержден"
+        p.bool_status = True
         p.save()
         return f"✅ Заказ <b>№{p.pk}</b> подтвержден"
     except Exception as ex: return "❌ " + str(ex)
@@ -286,6 +294,10 @@ def get_all_drivers():
     return Profile.objects.filter(role="Водитель")
 
 @sync_to_async
+def get_all_packers():
+    return Profile.objects.filter(role="Упаковщик")
+
+@sync_to_async
 def get_product(product_id):
     return Applications.objects.get(pk=product_id)
 
@@ -349,6 +361,9 @@ def drive_products():
 def get_operators():
     return Profile.objects.filter(role="Оператор")
 
+@sync_to_async
+def get_logists():
+    return Profile.objects.filter(role="Логист")
 
 @sync_to_async
 def find_products(info):
@@ -373,10 +388,11 @@ def get_money():
     driver = Applications.objects.filter(status="В дороге")
 
     total = 0
+    total_driver = 0
     total_packer = 0
+    total_opt_price = 0
     total_confirmed = 0
     total_dispatcher = 0
-    total_driver = 0
     total_disp_pack_driv = 0
 
     for dr in driver:
@@ -410,12 +426,14 @@ def get_money():
             if i.status == "Отменен" or i.status == "Фабричный брак" or i.status == "Дорожный брак":
                 pass
             else:
+                total_opt_price += int(i.opt_price)
                 total += int(i.price)
         except: pass
 
 
     text = f'''
 Итого 2,5% - <b>{round(total / 100 * 2.5, 10)} Рублей</b>
+Объем, ₽ (Подтвержденные, По Оптовой Цене) - <b>{round(total_opt_price, 10)} Рублей</b>
 Объем, ₽ (Подтвержденные) - <b>{round(total, 10)} Рублей</b>
 Общий объем диспетчера, упаковщика, водителя ₽ - <b>{round(total_disp_pack_driv, 10)} Рублей</b>
 Объем у диспетчера, ₽ - <b>{round(total_dispatcher, 10)} Рублей</b>
@@ -424,6 +442,22 @@ def get_money():
     '''
     return text
 
+
+@sync_to_async
+def set_dop_information(text, product_id):
+    try:
+        product = Applications.objects.get(pk=product_id)
+        product.delivery_information = text
+        product.save()
+        return "✅ Успешно"
+    except Exception as ex: return "❌ Ошибка (" + str(ex) + ")"
+
+
+@sync_to_async
+def set_path_file(product_id, path):
+    p = Applications.objects.get(pk=product_id)
+    p.checks_document = path
+    p.save()
 
 @sync_to_async
 def get_ojid_confirmed():

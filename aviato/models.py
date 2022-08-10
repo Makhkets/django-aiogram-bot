@@ -27,15 +27,20 @@ class Applications(models.Model):
     product = models.CharField(max_length=5000, verbose_name="Товар")
     price = models.CharField(max_length=100000, verbose_name="Цена")
     photo = models.ImageField(upload_to="images/%Y/%m/%d", verbose_name="Фото", blank=True, null=True)
-    phone = models.CharField(max_length=100, verbose_name="Номер телефона")
+    phone = models.CharField(max_length=100, verbose_name="Номер")
+
+    checks_document = models.CharField(max_length=1000, verbose_name="Чек", blank=True, null=True)
+
     direction = models.CharField(max_length=400, verbose_name="Направление", null=True, blank=True)
-    canceled_reason = models.CharField(max_length=3000, verbose_name="Причина отмены заказа", blank=True, null=True)
-    user = models.ForeignKey(Profile, on_delete=models.PROTECT, verbose_name="Пользователь который добавил товар")
-    create_time = models.DateTimeField(auto_now=True, verbose_name="Время создании заявки")
-    driver = models.ForeignKey(Profile, on_delete=models.PROTECT, verbose_name="Водитель который принял заказ", related_name="drive_user", null=True, blank=True)
-    status = models.CharField(max_length=200, blank=True, null=True, default="Ожидание подтверждения", verbose_name="Статус товара")
-    location = models.CharField(max_length=3000, verbose_name="Локация водителя", blank=True, null=True)
-    location_time = models.CharField(max_length=3000, verbose_name="Врея локация", null=True, blank=True)
+    delivery_information = models.CharField(max_length=1000, verbose_name="Информация о доставке", blank=True, null=True)
+    canceled_reason = models.CharField(max_length=3000, verbose_name="Причина отмены", blank=True, null=True)
+    user = models.ForeignKey(Profile, on_delete=models.PROTECT, verbose_name="Добавил")
+    bool_status = models.BooleanField(verbose_name="Подтвержден", null=True, blank=True)
+    create_time = models.DateField(auto_now=True, verbose_name="Время создания")
+    driver = models.ForeignKey(Profile, on_delete=models.PROTECT, verbose_name="Водитель", related_name="drive_user", null=True, blank=True)
+    status = models.CharField(max_length=200, blank=True, null=True, default="Ожидание подтверждения", verbose_name="Статус")
+    location = models.CharField(max_length=3000, verbose_name="Локация", blank=True, null=True)
+    location_time = models.CharField(max_length=3000, verbose_name="Время локации", null=True, blank=True)
     time_update_location = models.DateTimeField(auto_now=True, verbose_name="Время изменения локации")
 
     def __str__(self):
