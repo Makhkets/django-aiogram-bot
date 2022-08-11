@@ -1,0 +1,14 @@
+{% extends "admin/index.html" %}
+
+{% comment %}{% block extrastyle %}
+    {{ block.super }}
+    {# --- custom styles --- #}
+{% endblock %}{% endcomment %}
+
+{% block content %}
+    <div class="custom_block">
+        <h1><a href="{% url 'stats' %}">Перейти к статистике</a></h1>
+    </div>
+
+    {{ block.super }}
+{% endblock %}

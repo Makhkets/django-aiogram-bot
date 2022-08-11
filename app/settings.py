@@ -33,6 +33,7 @@ CSRF_TRUSTED_ORIGINS = ['https://1f35-188-0-188-135.eu.ngrok.io']
 # Application definition
 
 INSTALLED_APPS = [
+    'app.custom_admin',
     'grappelli',
     'django.contrib.admin',
     'django.contrib.auth',

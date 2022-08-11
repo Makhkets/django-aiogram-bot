@@ -44,6 +44,11 @@ class D(StatesGroup):
     dop_information = State()
     attach_check = State()
 
+    pr1 = State()
+    pr2 = State()
+    pr3 = State()
+    pr4 = State()
+
 
 async def get_menu(message):
     user = await get_user_or_create(
@@ -126,38 +131,39 @@ async def get_menu_call(call):
 
 
 async def cloud():
-    products = await drive_products()
-    for product in products:
-        time = int(str(product.time_update_location).split(" ")[1].split(":")[0])
-        current_time = int(str(datetime.datetime.now()).split(" ")[1].split(":")[0])
-        every_hours = current_time - time - 3
-        if every_hours > 6:
-            if product.status == "В дороге":
-                await bot.send_message(
-                    product.user.user_id, "❗ Обновите свою геолокацию"
-                )
-        if every_hours > 20:
-            if product.status == "Ожидание подтверждения":
-                operators = await get_operators()
-                for operator in operators:
+    try:
+        products = await drive_products()
+        for product in products:
+            time = int(str(product.time_update_location).split(" ")[1].split(":")[0])
+            current_time = int(str(datetime.datetime.now()).split(" ")[1].split(":")[0])
+            every_hours = current_time - time - 3
+            if every_hours > 6:
+                if product.status == "В дороге":
                     await bot.send_message(
-                        operator.user_id, "❗ У вас есть необработанныее заказы"
+                        product.user.user_id, "❗ Обновите свою геолокацию"
                     )
+            if every_hours > 20:
+                if product.status == "Ожидание подтверждения":
+                    operators = await get_operators()
+                    for operator in operators:
+                        await bot.send_message(
+                            operator.user_id, "❗ У вас есть необработанныее заказы"
+                        )
 
-            elif product.status == "Упакован":
-                logists = await get_logists()
-                for logist in logists:
-                    await bot.send_message(
-                        logist.user_id, "❗ У вас есть необработанныее заказы"
-                    )
+                elif product.status == "Упакован":
+                    logists = await get_logists()
+                    for logist in logists:
+                        await bot.send_message(
+                            logist.user_id, "❗ У вас есть необработанныее заказы"
+                        )
 
-            elif product.status == "Подтвержден":
-                packers = await get_all_packers()
-                for packer in packers:
-                    await bot.send_message(
-                        packer.user_id, "❗ У вас есть необработанныее заказы"
-                    )
-
+                elif product.status == "Подтвержден":
+                    packers = await get_all_packers()
+                    for packer in packers:
+                        await bot.send_message(
+                            packer.user_id, "❗ У вас есть необработанныее заказы"
+                        )
+    except Exception as ex: l.error(ex)
 
 @dp.message_handler(commands=["start"], state="*")
 async def start(message: types.Message, state: FSMContext):
@@ -393,10 +399,34 @@ async def code(message: types.Message, state: FSMContext):
 
 
 @dp.message_handler(text="✍ Добавить заявку", state="*")
-async def userrequests(message: types.Message):
-    await message.answer( ###############################################################################################################################
-        "🖋 Заполните и отправьте следующий шаблон\n\nТовар\nАдрес\nНомер (только цифры)\nЦена (число)\nПримечание\nФото\n\nЧтобы отменить загрузку товара напишите /start"
+async def userrequests(message: types.Message, state: FSMContext):
+    await D.pr1.set()
+    await message.answer("✍ Введите название товара: ")
+
+@dp.message_handler(state=D.pr1)
+async def userrequests(message: types.Message, state: FSMContext):
+    products = await get_products_inline(product=message.text)
+    inlineh1 = types.InlineKeyboardMarkup()
+    if len(products) >= 1:
+        for product in products:
+            inlineh1.row(
+                types.InlineKeyboardButton(
+                    product.product, callback_data=f"pr_prodcut_pr:{product.pk}"
+                )
+            )
+
+        await D.pr2.set()
+        await message.answer("Выберите товар с подходящим названием", reply_markup=inlineh1)
+    else:
+        await message.answer("❌ Нет в наличии такого товара")
+
+@dp.callback_query_handler(text_startswith="pr_prodcut_pr", state=D.pr2)
+async def userrequests(call: types.CallbackQuery, state: FSMContext):
+    await call.message.answer(
+        "🖋 Заполните и отправьте следующий шаблон\n\nТовар\nАдрес\nНомер (только цифры)\nЦена (число)\nПримечание\n\nЧтобы отменить загрузку товара напишите /start"
     )
+    product_id = call.data.split(":")[1]
+    await state.update_data(product_id=product_id)
     await D.note.set()
     await cloud()
 
@@ -404,7 +434,8 @@ async def userrequests(message: types.Message):
 @dp.message_handler(state=D.note)
 async def userrequests(message: types.Message, state: FSMContext):
     data = message.text.split("\n")
-    text = await product_save(user_id=str(message.from_user.id), data=data)
+    pr = await state.get_data()
+    text = await product_save(user_id=str(message.from_user.id), data=data, product_id=pr["product_id"])
     operators = await get_operators()
     for operator in operators:
         await bot.send_message(operator.user_id, "⌛ У вас есть необработанный заказ")
@@ -437,13 +468,13 @@ async def employees(message: types.Message):
                     callback_data=f"dop_information:{product.pk}",
                 )
             )
-            if "http://" in str(product.photo) or "https://" in str(product.photo):
+            if "http://" in str(product.products.photo) or "https://" in str(product.products.photo):
                 await message.answer_photo(
-                    str(product.photo), caption=text, reply_markup=inlineh1
+                    str(product.products.photo), caption=text, reply_markup=inlineh1
                 )
-            elif "media/users/" in str(product.photo):
+            elif "media/users/" in str(product.products.photo):
                 await message.answer_photo(
-                    open(str(product.photo), "rb"), caption=text, reply_markup=inlineh1
+                    open(str(product.products.photo), "rb"), caption=text, reply_markup=inlineh1
                 )
             else:
                 await message.answer(text, reply_markup=inlineh1)
@@ -464,13 +495,13 @@ async def employees(message: types.Message):
                     "❌ Удалить заявку", callback_data=f"remove_request:{product.pk}"
                 )
             )
-            if "http://" in str(product.photo) or "https://" in str(product.photo):
+            if "http://" in str(product.products.photo) or "https://" in str(product.products.photo):
                 await message.answer_photo(
-                    str(product.photo), caption=text, reply_markup=inlineh1
+                    str(product.products.photo), caption=text, reply_markup=inlineh1
                 )
-            elif "media/users/" in str(product.photo):
+            elif "media/users/" in str(product.products.photo):
                 await message.answer_photo(
-                    open(str(product.photo), "rb"), caption=text, reply_markup=inlineh1
+                    open(str(product.products.photo), "rb"), caption=text, reply_markup=inlineh1
                 )
             else:
                 await message.answer(text, reply_markup=inlineh1)
@@ -516,13 +547,13 @@ async def employees(message: types.Message, state: FSMContext):
             callback_data=f"dop_information:{product.pk}",
         )
     )
-    if "http://" in str(product.photo) or "https://" in str(product.photo):
+    if "http://" in str(product.products.photo) or "https://" in str(product.products.photo):
         await message.answer_photo(
-            str(product.photo), caption=text, reply_markup=inlineh1
+            str(product.products.photo), caption=text, reply_markup=inlineh1
         )
-    elif "media/users/" in str(product.photo):
+    elif "media/users/" in str(product.products.photo):
         await message.answer_photo(
-            open(str(product.photo), "rb"), caption=text, reply_markup=inlineh1
+            open(str(product.products.photo), "rb"), caption=text, reply_markup=inlineh1
         )
     else:
         await message.answer(text, reply_markup=inlineh1)
@@ -564,13 +595,13 @@ async def dfs13fdsv(message: types.Message, state: FSMContext):
             inlineh1.row(
                 types.InlineKeyboardButton("🧾 Прикрепить чек", callback_data=f"attach_check:{product.pk}")
             )
-            if "http://" in str(product.photo) or "https://" in str(product.photo):
+            if "http://" in str(product.products.photo) or "https://" in str(product.products.photo):
                 await message.answer_photo(
-                    str(product.photo), caption=text, reply_markup=inlineh1
+                    str(product.products.photo), caption=text, reply_markup=inlineh1
                 )
-            elif "media/users/" in str(product.photo):
+            elif "media/users/" in str(product.products.photo):
                 await message.answer_photo(
-                    open(str(product.photo), "rb"), caption=text, reply_markup=inlineh1
+                    open(str(product.products.photo), "rb"), caption=text, reply_markup=inlineh1
                 )
             else:
                 await message.answer(text, reply_markup=inlineh1)
@@ -619,11 +650,6 @@ async def employees(message: types.Message):
     )
     inlineh1.row(
         types.InlineKeyboardButton(
-            "👷‍♂️ Переданные Упаковщику", callback_data="oj_packer"
-        )
-    )
-    inlineh1.row(
-        types.InlineKeyboardButton(
             "👨‍💻 Переданные диспетчеру", callback_data="oj_dispatcher"
         ),
         types.InlineKeyboardButton("🚗 В дороге", callback_data="oj_drive"),
@@ -633,11 +659,47 @@ async def employees(message: types.Message):
         types.InlineKeyboardButton("❌ Фабричный брак", callback_data="oj_fabr_brak"),
     )
     inlineh1.row(
-        types.InlineKeyboardButton("✅ Доставлено", callback_data="oj_delevired")
+        types.InlineKeyboardButton("✅ Доставлено", callback_data="oj_delevired"),
+        types.InlineKeyboardButton("❎ Ожидающие товары", callback_data="oj_pr"),
+
+    )
+
+    inlineh1.row(
+        types.InlineKeyboardButton(
+            "👷‍♂️ Переданные Упаковщику", callback_data="oj_packer"
+        )
     )
 
     await message.answer(answer, reply_markup=inlineh1)
     await cloud()
+
+
+# Ожидающие товары oj_pr
+@dp.callback_query_handler(text_startswith="oj_pr", state="*")
+async def add_employeees(call: types.CallbackQuery, state: FSMContext):
+    products = await oj_pr()
+
+    if len(products) >= 1:
+        for product in products:
+            text = f"Товар: {product}\nКоличество: {product.count}\n" \
+                   f"Оптовая цена: {product.opt_price}\nСумма товара: {product.product_suum}\n" \
+                   f"2.5% от Суммы Товара: {product.product_percent}"
+            inlineh1 = types.InlineKeyboardMarkup()
+            inlineh1.row(
+                types.InlineKeyboardButton("Скрыть", callback_data=f"message_hide")
+            )
+            if "http://" in str(product.photo) or "https://" in str(product.photo):
+                await call.message.answer_photo(
+                    str(product.photo), caption=text, reply_markup=inlineh1
+                )
+            elif "media/users/" in str(product.photo):
+                await call.message.answer_photo(
+                    open(str(product.photo), "rb"), caption=text, reply_markup=inlineh1
+                )
+            else:
+                await call.message.answer(text, reply_markup=inlineh1)
+    else:
+        await call.message.answer("❌ Ничего не найдено")
 
 
 # Доставлено
@@ -652,13 +714,13 @@ async def add_employeees(call: types.CallbackQuery, state: FSMContext):
             inlineh1.row(
                 types.InlineKeyboardButton("Скрыть", callback_data=f"message_hide")
             )
-            if "http://" in str(product.photo) or "https://" in str(product.photo):
+            if "http://" in str(product.products.photo) or "https://" in str(product.products.photo):
                 await call.message.answer_photo(
-                    str(product.photo), caption=text, reply_markup=inlineh1
+                    str(product.products.photo), caption=text, reply_markup=inlineh1
                 )
-            elif "media/users/" in str(product.photo):
+            elif "media/users/" in str(product.products.photo):
                 await call.message.answer_photo(
-                    open(str(product.photo), "rb"), caption=text, reply_markup=inlineh1
+                    open(str(product.products.photo), "rb"), caption=text, reply_markup=inlineh1
                 )
             else:
                 await call.message.answer(text, reply_markup=inlineh1)
@@ -677,13 +739,13 @@ async def add_employeees(call: types.CallbackQuery, state: FSMContext):
             inlineh1.row(
                 types.InlineKeyboardButton("Скрыть", callback_data=f"message_hide")
             )
-            if "http://" in str(product.photo) or "https://" in str(product.photo):
+            if "http://" in str(product.products.photo) or "https://" in str(product.products.photo):
                 await call.message.answer_photo(
-                    str(product.photo), caption=text, reply_markup=inlineh1
+                    str(product.products.photo), caption=text, reply_markup=inlineh1
                 )
-            elif "media/users/" in str(product.photo):
+            elif "media/users/" in str(product.products.photo):
                 await call.message.answer_photo(
-                    open(str(product.photo), "rb"), caption=text, reply_markup=inlineh1
+                    open(str(product.products.photo), "rb"), caption=text, reply_markup=inlineh1
                 )
             else:
                 await call.message.answer(text, reply_markup=inlineh1)
@@ -702,13 +764,13 @@ async def add_employeees(call: types.CallbackQuery, state: FSMContext):
             inlineh1.row(
                 types.InlineKeyboardButton("Скрыть", callback_data=f"message_hide")
             )
-            if "http://" in str(product.photo) or "https://" in str(product.photo):
+            if "http://" in str(product.products.photo) or "https://" in str(product.products.photo):
                 await call.message.answer_photo(
-                    str(product.photo), caption=text, reply_markup=inlineh1
+                    str(product.products.photo), caption=text, reply_markup=inlineh1
                 )
-            elif "media/users/" in str(product.photo):
+            elif "media/users/" in str(product.products.photo):
                 await call.message.answer_photo(
-                    open(str(product.photo), "rb"), caption=text, reply_markup=inlineh1
+                    open(str(product.products.photo), "rb"), caption=text, reply_markup=inlineh1
                 )
             else:
                 await call.message.answer(text, reply_markup=inlineh1)
@@ -727,13 +789,13 @@ async def add_employeees(call: types.CallbackQuery, state: FSMContext):
             inlineh1.row(
                 types.InlineKeyboardButton("Скрыть", callback_data=f"message_hide")
             )
-            if "http://" in str(product.photo) or "https://" in str(product.photo):
+            if "http://" in str(product.products.photo) or "https://" in str(product.products.photo):
                 await call.message.answer_photo(
-                    str(product.photo), caption=text, reply_markup=inlineh1
+                    str(product.products.photo), caption=text, reply_markup=inlineh1
                 )
-            elif "media/users/" in str(product.photo):
+            elif "media/users/" in str(product.products.photo):
                 await call.message.answer_photo(
-                    open(str(product.photo), "rb"), caption=text, reply_markup=inlineh1
+                    open(str(product.products.photo), "rb"), caption=text, reply_markup=inlineh1
                 )
             else:
                 await call.message.answer(text, reply_markup=inlineh1)
@@ -752,13 +814,13 @@ async def add_employeees(call: types.CallbackQuery, state: FSMContext):
             inlineh1.row(
                 types.InlineKeyboardButton("Скрыть", callback_data=f"message_hide")
             )
-            if "http://" in str(product.photo) or "https://" in str(product.photo):
+            if "http://" in str(product.products.photo) or "https://" in str(product.products.photo):
                 await call.message.answer_photo(
-                    str(product.photo), caption=text, reply_markup=inlineh1
+                    str(product.products.photo), caption=text, reply_markup=inlineh1
                 )
-            elif "media/users/" in str(product.photo):
+            elif "media/users/" in str(product.products.photo):
                 await call.message.answer_photo(
-                    open(str(product.photo), "rb"), caption=text, reply_markup=inlineh1
+                    open(str(product.products.photo), "rb"), caption=text, reply_markup=inlineh1
                 )
             else:
                 await call.message.answer(text, reply_markup=inlineh1)
@@ -777,13 +839,13 @@ async def add_employeees(call: types.CallbackQuery, state: FSMContext):
             inlineh1.row(
                 types.InlineKeyboardButton("Скрыть", callback_data=f"message_hide")
             )
-            if "http://" in str(product.photo) or "https://" in str(product.photo):
+            if "http://" in str(product.products.photo) or "https://" in str(product.products.photo):
                 await call.message.answer_photo(
-                    str(product.photo), caption=text, reply_markup=inlineh1
+                    str(product.products.photo), caption=text, reply_markup=inlineh1
                 )
-            elif "media/users/" in str(product.photo):
+            elif "media/users/" in str(product.products.photo):
                 await call.message.answer_photo(
-                    open(str(product.photo), "rb"), caption=text, reply_markup=inlineh1
+                    open(str(product.products.photo), "rb"), caption=text, reply_markup=inlineh1
                 )
             else:
                 await call.message.answer(text, reply_markup=inlineh1)
@@ -802,13 +864,13 @@ async def add_employeees(call: types.CallbackQuery, state: FSMContext):
             inlineh1.row(
                 types.InlineKeyboardButton("Скрыть", callback_data=f"message_hide")
             )
-            if "http://" in str(product.photo) or "https://" in str(product.photo):
+            if "http://" in str(product.products.photo) or "https://" in str(product.products.photo):
                 await call.message.answer_photo(
-                    str(product.photo), caption=text, reply_markup=inlineh1
+                    str(product.products.photo), caption=text, reply_markup=inlineh1
                 )
-            elif "media/users/" in str(product.photo):
+            elif "media/users/" in str(product.products.photo):
                 await call.message.answer_photo(
-                    open(str(product.photo), "rb"), caption=text, reply_markup=inlineh1
+                    open(str(product.products.photo), "rb"), caption=text, reply_markup=inlineh1
                 )
             else:
                 await call.message.answer(text, reply_markup=inlineh1)
@@ -830,13 +892,13 @@ async def add_employeees(call: types.CallbackQuery, state: FSMContext):
                 inlineh1.row(
                     types.InlineKeyboardButton("Скрыть", callback_data=f"message_hide")
                 )
-                if "http://" in str(product.photo) or "https://" in str(product.photo):
+                if "http://" in str(product.products.photo) or "https://" in str(product.products.photo):
                     await call.message.answer_photo(
-                        str(product.photo), caption=text, reply_markup=inlineh1
+                        str(product.products.photo), caption=text, reply_markup=inlineh1
                     )
-                elif "media/users/" in str(product.photo):
+                elif "media/users/" in str(product.products.photo):
                     await call.message.answer_photo(
-                        open(str(product.photo), "rb"),
+                        open(str(product.products.photo), "rb"),
                         caption=text,
                         reply_markup=inlineh1,
                     )
@@ -857,13 +919,13 @@ async def add_employeees(call: types.CallbackQuery, state: FSMContext):
             inlineh1.row(
                 types.InlineKeyboardButton("Скрыть", callback_data=f"message_hide")
             )
-            if "http://" in str(product.photo) or "https://" in str(product.photo):
+            if "http://" in str(product.products.photo) or "https://" in str(product.products.photo):
                 await call.message.answer_photo(
-                    str(product.photo), caption=text, reply_markup=inlineh1
+                    str(product.products.photo), caption=text, reply_markup=inlineh1
                 )
-            elif "media/users/" in str(product.photo):
+            elif "media/users/" in str(product.products.photo):
                 await call.message.answer_photo(
-                    open(str(product.photo), "rb"), caption=text, reply_markup=inlineh1
+                    open(str(product.products.photo), "rb"), caption=text, reply_markup=inlineh1
                 )
             else:
                 await call.message.answer(text, reply_markup=inlineh1)
@@ -884,13 +946,13 @@ async def employees(message: types.Message):
                     callback_data=f"confirmed_request:{product.pk}",
                 )
             )
-            if "http://" in str(product.photo) or "https://" in str(product.photo):
+            if "http://" in str(product.products.photo) or "https://" in str(product.products.photo):
                 await message.answer_photo(
-                    str(product.photo), caption=text, reply_markup=inlineh1
+                    str(product.products.photo), caption=text, reply_markup=inlineh1
                 )
-            elif "media/users/" in str(product.photo):
+            elif "media/users/" in str(product.products.photo):
                 await message.answer_photo(
-                    open(str(product.photo), "rb"), caption=text, reply_markup=inlineh1
+                    open(str(product.products.photo), "rb"), caption=text, reply_markup=inlineh1
                 )
             else:
                 await message.answer(text, reply_markup=inlineh1)
@@ -931,16 +993,16 @@ async def employees(message: types.Message):
             inlineh1 = types.InlineKeyboardMarkup()
             inlineh1.row(
                 types.InlineKeyboardButton(
-                    "✅ Заказ упакован", callback_data=f"confirmed2_request:{product.pk}"
+                    "✅ Передан диспетчеру", callback_data=f"confirmed2_request:{product.pk}"
                 )
             )
-            if "http://" in str(product.photo) or "https://" in str(product.photo):
+            if "http://" in str(product.products.photo) or "https://" in str(product.products.photo):
                 await message.answer_photo(
-                    str(product.photo), caption=text, reply_markup=inlineh1
+                    str(product.products.photo), caption=text, reply_markup=inlineh1
                 )
-            elif "media/users/" in str(product.photo):
+            elif "media/users/" in str(product.products.photo):
                 await message.answer_photo(
-                    open(str(product.photo), "rb"), caption=text, reply_markup=inlineh1
+                    open(str(product.products.photo), "rb"), caption=text, reply_markup=inlineh1
                 )
             else:
                 await message.answer(text, reply_markup=inlineh1)
@@ -990,13 +1052,13 @@ async def employees(message: types.Message):
                     callback_data=f"conf_r_request:{product.pk}",
                 )
             )
-            if "http://" in str(product.photo) or "https://" in str(product.photo):
+            if "http://" in str(product.products.photo) or "https://" in str(product.products.photo):
                 await message.answer_photo(
-                    str(product.photo), caption=text, reply_markup=inlineh1
+                    str(product.products.photo), caption=text, reply_markup=inlineh1
                 )
-            elif "media/users/" in str(product.photo):
+            elif "media/users/" in str(product.products.photo):
                 await message.answer_photo(
-                    open(str(product.photo), "rb"), caption=text, reply_markup=inlineh1
+                    open(str(product.products.photo), "rb"), caption=text, reply_markup=inlineh1
                 )
             else:
                 await message.answer(text, reply_markup=inlineh1)
@@ -1051,13 +1113,13 @@ async def employees(message: types.Message):
                 )
             )
             text = f"Информация о доставке: {str(product.delivery_information).replace('None', 'Отсутствует')}\nПримечание: {product.note}\nАдресс: {product.address}\nТовар: {product.product}\nЦена: {product.price}\nНомер: {product.phone}\nВладелец товара: @{product.user.username} ({product.user.role})\n\nID: {product.pk}\nЛокация водителя: {str(product.location).replace('None', 'Неизвестно')}\nИзменение локации было в: {str(product.time_update_location).split('.')[0]}"
-            if "http://" in str(product.photo) or "https://" in str(product.photo):
+            if "http://" in str(product.products.photo) or "https://" in str(product.products.photo):
                 await message.answer_photo(
-                    str(product.photo), caption=text, reply_markup=inlineh1
+                    str(product.products.photo), caption=text, reply_markup=inlineh1
                 )
-            elif "media/users/" in str(product.photo):
+            elif "media/users/" in str(product.products.photo):
                 await message.answer_photo(
-                    open(str(product.photo), "rb"), caption=text, reply_markup=inlineh1
+                    open(str(product.products.photo), "rb"), caption=text, reply_markup=inlineh1
                 )
             else:
                 await message.answer(text, reply_markup=inlineh1)
@@ -1131,13 +1193,13 @@ async def employees(message: types.Message):
                     )
                 )
 
-            if "http://" in str(product.photo) or "https://" in str(product.photo):
+            if "http://" in str(product.products.photo) or "https://" in str(product.products.photo):
                 await message.answer_photo(
-                    str(product.photo), caption=text, reply_markup=inlineh1
+                    str(product.products.photo), caption=text, reply_markup=inlineh1
                 )
-            elif "media/users/" in str(product.photo):
+            elif "media/users/" in str(product.products.photo):
                 await message.answer_photo(
-                    open(str(product.photo), "rb"), caption=text, reply_markup=inlineh1
+                    open(str(product.products.photo), "rb"), caption=text, reply_markup=inlineh1
                 )
             else:
                 await message.answer(text, reply_markup=inlineh1)
@@ -1164,17 +1226,17 @@ async def add_employeees(call: types.CallbackQuery, state: FSMContext):
             )
         )
 
-        if "http://" in str(product.photo) or "https://" in str(product.photo):
+        if "http://" in str(product.products.photo) or "https://" in str(product.products.photo):
             await bot.send_photo(
                 chat_id=user_id,
-                photo=str(product.photo),
+                photo=str(product.products.photo),
                 caption=text,
                 reply_markup=inlineh1,
             )
-        elif "media/users/" in str(product.photo):
+        elif "media/users/" in str(product.products.photo):
             await bot.send_photo(
                 chat_id=user_id,
-                photo=open(str(product.photo), "rb"),
+                photo=open(str(product.products.photo), "rb"),
                 caption=text,
                 reply_markup=inlineh1,
             )
@@ -1233,13 +1295,13 @@ async def employees(message: types.Message, state: FSMContext):
             )
 
             text = f"Информация о доставке: {str(product.delivery_information).replace('None', 'Отсутствует')}\nПримечание: {product.note}\nАдресс: {product.address}\nТовар: {product.product}\nЦена: {product.price}\nНомер: {product.phone}\nВладелец товара: @{product.user.username} ({product.user.role})\n\nID: {product.pk}\nЛокация водителя: {str(product.location).replace('None', 'Неизвестно')}\nИзменение локации было в: {str(product.time_update_location).split('.')[0]}"
-            if "http://" in str(product.photo) or "https://" in str(product.photo):
+            if "http://" in str(product.products.photo) or "https://" in str(product.products.photo):
                 await message.answer_photo(
-                    str(product.photo), caption=text, reply_markup=inlineh1
+                    str(product.products.photo), caption=text, reply_markup=inlineh1
                 )
-            elif "media/users/" in str(product.photo):
+            elif "media/users/" in str(product.products.photo):
                 await message.answer_photo(
-                    open(str(product.photo), "rb"), caption=text, reply_markup=inlineh1
+                    open(str(product.products.photo), "rb"), caption=text, reply_markup=inlineh1
                 )
             else:
                 await message.answer(text, reply_markup=inlineh1)

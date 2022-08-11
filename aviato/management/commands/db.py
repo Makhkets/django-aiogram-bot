@@ -87,23 +87,31 @@ def product_edit(data, product_id):
         return "✅ Товар успешно изменен"
     except Exception as ex: return f"❌ Ошибка при загрузке товара ({ex})"
 
+@sync_to_async
+def get_products_inline(product):
+
+    p = Products.objects.filter(count__lt=1, availability=True)
+    for i in p:
+        i.availability = False
+        i.save()
+
+    product = product.lower()
+    return Products.objects.filter(product__contains=product, count__gte=1)
 
 @sync_to_async
-def product_save(user_id, data):
+def product_save(user_id, data, product_id):
     try:
         user = Profile.objects.get(user_id=str(user_id))
+        pr = Products.objects.get(pk=product_id)
+        pr.count -= 1
+        pr.save()
 
-
-        product = data[0].replace("нет", "").replace("Нет", "")
+        product = data[0]
         address = data[1].replace("нет", "").replace("Нет", "")
         phone = data[2].replace("нет", "").replace("Нет", "")
         price = data[3].replace("нет", "").replace("Нет", "")
         note = data[4].replace("нет", "").replace("Нет", "")
-        photo = ""
-        if data[5] == "нет" or data[5] == "Нет":
-            pass
-        else:
-            photo = data[5]
+
 
         Applications.objects.create(
             note=note,
@@ -111,8 +119,8 @@ def product_save(user_id, data):
             product=product,
             phone=phone,
             price=price,
-            photo=photo,
             user=user,
+            products=pr,
             status="Ожидание подтверждения"
         )
 
@@ -161,7 +169,7 @@ def product_pack_conf(product_id):
         a = Applications.objects.get(pk=product_id)
         a.status = "Упакован"
         a.save()
-        return "✅ Товар успешно упакован и передан логисту"
+        return "✅ Товар упакован и передан диспетчеру"
     except Exception as ex: return "❌ " + str(ex)     
 
 @sync_to_async
@@ -176,6 +184,7 @@ def report_info():
         delivered = Applications.objects.filter(status="Доставлен").count()
         matchs = Applications.objects.filter(status="Фабричный брак").count()
         matchs2 = Applications.objects.filter(status="Дорожный брак").count()
+        product_ended = Products.objects.filter(count=0).count()
 
         text = f'''
 Ожидающие подтверждения:  <b>{expectation}</b>
@@ -186,6 +195,7 @@ def report_info():
 В дороге:  <b>{drive}</b>
 Дорожный брак: <b>{matchs2}</b>
 Фабричный брак: <b>{matchs}</b>
+Ожидающие товара: <b>{product_ended}</b>
 Доставлено:  <b>{delivered}</b>
         '''
 
@@ -210,7 +220,7 @@ def product_pack(product_id, dist):
         p.direction = dist
         p.save()
         return f"✅ Товар <b>№{p.pk}</b> Отправлен на Упаковку"
-    except Exception as ex: return "❌ " + ex
+    except Exception as ex: return "❌ " + str(ex)
 
 @sync_to_async
 def handover_product_to_drive(product_id, user_id):
@@ -390,10 +400,13 @@ def get_money():
     total = 0
     total_driver = 0
     total_packer = 0
-    total_opt_price = 0
     total_confirmed = 0
     total_dispatcher = 0
     total_disp_pack_driv = 0
+
+    total_sum_p = 0
+    for i in Products.objects.all():
+        total_sum_p += i.opt_price
 
     for dr in driver:
         try:
@@ -426,19 +439,23 @@ def get_money():
             if i.status == "Отменен" or i.status == "Фабричный брак" or i.status == "Дорожный брак":
                 pass
             else:
-                total_opt_price += int(i.opt_price)
                 total += int(i.price)
         except: pass
 
 
     text = f'''
+<b>📋 Заявки:</b>
 Итого 2,5% - <b>{round(total / 100 * 2.5, 10)} Рублей</b>
-Объем, ₽ (Подтвержденные, По Оптовой Цене) - <b>{round(total_opt_price, 10)} Рублей</b>
 Объем, ₽ (Подтвержденные) - <b>{round(total, 10)} Рублей</b>
 Общий объем диспетчера, упаковщика, водителя ₽ - <b>{round(total_disp_pack_driv, 10)} Рублей</b>
 Объем у диспетчера, ₽ - <b>{round(total_dispatcher, 10)} Рублей</b>
 Объем у упаковщика, ₽ - <b>{round(total_packer, 10)} Рублей</b>
 Объем в дороге, ₽ - <b>{round(total_driver, 10)} Рублей</b> 
+
+<b>🛒 Товары:</b>
+Общая сумма Товаров: <b>{total_sum_p} Рублей</b>
+2.5% От Общей Суммы:  <b> {(total_sum_p / 100) * 2.5} Рублей</b>
+Общее количество Товаров: <b>{Products.objects.all().count()}</b>
     '''
     return text
 
@@ -494,3 +511,7 @@ def fabr_brack_products():
 @sync_to_async
 def oj_delivered():
     return Applications.objects.filter(status="Доставлен")
+
+@sync_to_async
+def oj_pr():
+    return Products.objects.filter(count=0)

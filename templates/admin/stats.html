@@ -1,0 +1,26 @@
+{% extends 'admin/base_site.html' %}
+
+{% block title %}Тестовая страница в админке | Мой проект{% endblock %}
+
+{% comment %}{% block extrastyle %}{{ block.super }}
+    <link rel="stylesheet" href="{{ STATIC_URL }}path/css/style.css">
+{% endblock %}{% endcomment %}
+
+{% comment %}{% block breadcrumbs %}
+    <div class="breadcrumbs">
+        <a href="{% url 'admin:index' %}">{% trans 'Home' %}</a>
+        &rsaquo;
+        <a href="{% url 'admin:spec_my_model_changelist' %}">Пункт хлебных крошек</a>
+        &rsaquo; Тестовая страница в админке
+    </div>
+{% endblock %}{% endcomment %}
+
+{% block content %}
+    <div class="fieldsets">
+        <fieldset class="module">
+            <h1>Тестовая страница в админке</h1>
+            <p>Пример показывает, как добавить свою страницу в админку Django</p>
+            <p>Произвольная переменная: {{ data }}</p>
+        </fieldset>
+    </div>
+{% endblock %}
