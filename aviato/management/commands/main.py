@@ -1,7 +1,6 @@
 import logging
 import datetime
 from random import randint
-
 from aiogram import Bot, Dispatcher, executor, types
 from aiogram.types import ContentTypes
 
@@ -49,6 +48,23 @@ class D(StatesGroup):
     pr3 = State()
     pr4 = State()
 
+
+async def count_bool(product):
+    if product.bool_count:
+        return "✅ Есть в наличии"
+    return "❌ Нет в наличии ❌"
+
+async def get_message_from_product(product):
+    cout_bool = await count_bool(product=product)
+    text =  f"Примечание: {product.note}\nАдресс: {product.address}\n" \
+           f"Товар: {str(product.product).replace('[', '').replace(']', '')}\n" \
+           f"Цена: {product.price}\nНомер: {product.phone}\n" \
+           f"Владелец товара: @{product.user.username} ({product.user.role})\n\n" \
+           f"ID: {product.pk}\nЛокация водителя: {str(product.location).replace('None', 'Неизвестно')}\n" \
+           f"Изменение локации было в: {str(product.time_update_location).split('.')[0]}\n" \
+           f"{cout_bool}"
+
+    return text.replace("'", "")
 
 async def get_menu(message):
     user = await get_user_or_create(
@@ -163,7 +179,26 @@ async def cloud():
                         await bot.send_message(
                             packer.user_id, "❗ У вас есть необработанныее заказы"
                         )
-    except Exception as ex: l.error(ex)
+
+
+        a = Applications.objects.all()
+        for application in a:
+            prod = application.products.all()
+            for produc in prod:
+                if produc.count >= 0:
+                    application.bool_count = True
+                    application.save()
+                else:
+                    application.bool_count = False
+                    application.save()
+                    continue
+
+
+
+
+    except Exception as ex:
+        l.error(ex)
+
 
 @dp.message_handler(commands=["start"], state="*")
 async def start(message: types.Message, state: FSMContext):
@@ -219,9 +254,7 @@ async def dsa1rfxsf3(call: types.CallbackQuery, state: FSMContext):
 @dp.callback_query_handler(text_startswith="logist_code", state="*")
 async def dsa1rfxsf3(call: types.CallbackQuery, state: FSMContext):
     code = randint(100, 999)
-    await create_code_employees(
-        user_id=call.message.chat.id, code=code, role="Логист"
-    )
+    await create_code_employees(user_id=call.message.chat.id, code=code, role="Логист")
     await get_menu_call(call)
     await call.message.answer(
         f"Код чтобы получить статус <b>Логист</b> в боте\n\nКод: <code>{code}</code>"
@@ -400,33 +433,9 @@ async def code(message: types.Message, state: FSMContext):
 
 @dp.message_handler(text="✍ Добавить заявку", state="*")
 async def userrequests(message: types.Message, state: FSMContext):
-    await D.pr1.set()
-    await message.answer("✍ Введите название товара: ")
-
-@dp.message_handler(state=D.pr1)
-async def userrequests(message: types.Message, state: FSMContext):
-    products = await get_products_inline(product=message.text)
-    inlineh1 = types.InlineKeyboardMarkup()
-    if len(products) >= 1:
-        for product in products:
-            inlineh1.row(
-                types.InlineKeyboardButton(
-                    product.product, callback_data=f"pr_prodcut_pr:{product.pk}"
-                )
-            )
-
-        await D.pr2.set()
-        await message.answer("Выберите товар с подходящим названием", reply_markup=inlineh1)
-    else:
-        await message.answer("❌ Нет в наличии такого товара")
-
-@dp.callback_query_handler(text_startswith="pr_prodcut_pr", state=D.pr2)
-async def userrequests(call: types.CallbackQuery, state: FSMContext):
-    await call.message.answer(
+    await message.answer(
         "🖋 Заполните и отправьте следующий шаблон\n\nТовар\nАдрес\nНомер (только цифры)\nЦена (число)\nПримечание\n\nЧтобы отменить загрузку товара напишите /start"
     )
-    product_id = call.data.split(":")[1]
-    await state.update_data(product_id=product_id)
     await D.note.set()
     await cloud()
 
@@ -434,8 +443,7 @@ async def userrequests(call: types.CallbackQuery, state: FSMContext):
 @dp.message_handler(state=D.note)
 async def userrequests(message: types.Message, state: FSMContext):
     data = message.text.split("\n")
-    pr = await state.get_data()
-    text = await product_save(user_id=str(message.from_user.id), data=data, product_id=pr["product_id"])
+    text = await product_save(user_id=str(message.from_user.id), data=data)
     operators = await get_operators()
     for operator in operators:
         await bot.send_message(operator.user_id, "⌛ У вас есть необработанный заказ")
@@ -449,7 +457,8 @@ async def employees(message: types.Message):
     products = await get_confirm_products()
     if len(products) >= 1:
         for product in products:
-            text = f"Примечание: {product.note}\nАдресс: {product.address}\nТовар: {product.product}\nЦена: {product.price}\nНомер: {product.phone}\nВладелец товара: @{product.user.username} ({product.user.role})\n\nID: {product.pk}\nЛокация водителя: {str(product.location).replace('None', 'Неизвестно')}\nИзменение локации было в: {str(product.time_update_location).split('.')[0]}"
+
+            text = await get_message_from_product(product)
             inlineh1 = types.InlineKeyboardMarkup()
             inlineh1.row(
                 types.InlineKeyboardButton(
@@ -468,19 +477,25 @@ async def employees(message: types.Message):
                     callback_data=f"dop_information:{product.pk}",
                 )
             )
-            if "http://" in str(product.products.photo) or "https://" in str(product.products.photo):
-                await message.answer_photo(
-                    str(product.products.photo), caption=text, reply_markup=inlineh1
-                )
-            elif "media/users/" in str(product.products.photo):
-                await message.answer_photo(
-                    open(str(product.products.photo), "rb"), caption=text, reply_markup=inlineh1
-                )
+
+            photos = [ph.photo for ph in product.products.all()]
+            inlineh2 = types.InlineKeyboardMarkup()
+            inlineh2.row(
+                types.InlineKeyboardButton("Скрыть", callback_data=f"message_hide")
+            )
+
+            if None in photos: pass
             else:
-                await message.answer(text, reply_markup=inlineh1)
+                for p in photos:
+                    await message.answer_photo(photo=p, reply_markup=inlineh2)
+            await message.answer(text, reply_markup=inlineh1)
+
     else:
         await message.answer("Пока нет заявок.")
     await cloud()
+
+
+# a.products.first().photo
 
 
 @dp.message_handler(text="📔 Все Заявки", state="*")
@@ -488,23 +503,25 @@ async def employees(message: types.Message):
     products = await get_products()
     if len(products) >= 1:
         for product in products:
-            text = f"Информация о доставке: {str(product.delivery_information).replace('None', 'Отсутствует')}\nПримечание: {product.note}\nАдресс: {product.address}\nТовар: {product.product}\nЦена: {product.price}\nНомер: {product.phone}\nВладелец товара: @{product.user.username} ({product.user.role})\n\nID: {product.pk}\nЛокация водителя: {str(product.location).replace('None', 'Неизвестно')}\nИзменение локации было в: {str(product.time_update_location).split('.')[0]}"
+            text = await get_message_from_product(product)
             inlineh1 = types.InlineKeyboardMarkup()
             inlineh1.row(
                 types.InlineKeyboardButton(
                     "❌ Удалить заявку", callback_data=f"remove_request:{product.pk}"
                 )
             )
-            if "http://" in str(product.products.photo) or "https://" in str(product.products.photo):
-                await message.answer_photo(
-                    str(product.products.photo), caption=text, reply_markup=inlineh1
-                )
-            elif "media/users/" in str(product.products.photo):
-                await message.answer_photo(
-                    open(str(product.products.photo), "rb"), caption=text, reply_markup=inlineh1
-                )
+
+            photos = [ph.photo for ph in product.products.all()]
+            inlineh2 = types.InlineKeyboardMarkup()
+            inlineh2.row(
+                types.InlineKeyboardButton("Скрыть", callback_data=f"message_hide")
+            )
+            if None in photos: pass
             else:
-                await message.answer(text, reply_markup=inlineh1)
+                for p in photos:
+                    await message.answer_photo(photo=p, reply_markup=inlineh2)
+            await message.answer(text, reply_markup=inlineh1)
+
     else:
         await message.answer("Пока нет заявок.")
     await cloud()
@@ -529,7 +546,8 @@ async def employees(message: types.Message, state: FSMContext):
     await state.finish()
 
     product = await get_product(product_id=product_id)
-    text = f"Информация о доставке: {str(product.delivery_information).replace('None', 'Отсутствует')}\nПримечание: {product.note}\nАдресс: {product.address}\nТовар: {product.product}\nЦена: {product.price}\nНомер: {product.phone}\nВладелец товара: @{product.user.username} ({product.user.role})\n\nID: {product.pk}\nЛокация водителя: {str(product.location).replace('None', 'Неизвестно')}\nИзменение локации было в: {str(product.time_update_location).split('.')[0]}"
+    cout_bool = await count_bool(product=product)
+    text = await get_message_from_product(product)
     inlineh1 = types.InlineKeyboardMarkup()
     inlineh1.row(
         types.InlineKeyboardButton(
@@ -547,16 +565,16 @@ async def employees(message: types.Message, state: FSMContext):
             callback_data=f"dop_information:{product.pk}",
         )
     )
-    if "http://" in str(product.products.photo) or "https://" in str(product.products.photo):
-        await message.answer_photo(
-            str(product.products.photo), caption=text, reply_markup=inlineh1
-        )
-    elif "media/users/" in str(product.products.photo):
-        await message.answer_photo(
-            open(str(product.products.photo), "rb"), caption=text, reply_markup=inlineh1
-        )
+
+    photos = [ph.photo for ph in product.products.all()]
+    inlineh2 = types.InlineKeyboardMarkup()
+    inlineh2.row(types.InlineKeyboardButton("Скрыть", callback_data=f"message_hide"))
+    if None in photos:
+        pass
     else:
-        await message.answer(text, reply_markup=inlineh1)
+        for p in photos:
+            await message.answer_photo(photo=p, reply_markup=inlineh2)
+    await message.answer(text, reply_markup=inlineh1)
 
 
 # Добавить показ товара вновь
@@ -590,21 +608,26 @@ async def dfs13fdsv(message: types.Message, state: FSMContext):
     products = await get_all_ojid_check()
     if len(products) >= 1:
         for product in products:
-            text = f"Информация о доставке: {str(product.delivery_information).replace('None', 'Отсутствует')}\nПримечание: {product.note}\nАдресс: {product.address}\nТовар: {product.product}\nЦена: {product.price}\nНомер: {product.phone}\nВладелец товара: @{product.user.username} ({product.user.role})\n\nID: {product.pk}\nЛокация водителя: {str(product.location).replace('None', 'Неизвестно')}\nИзменение локации было в: {str(product.time_update_location).split('.')[0]}"
+            cout_bool = await count_bool(product=product)
+            text = await get_message_from_product(product)
             inlineh1 = types.InlineKeyboardMarkup()
             inlineh1.row(
-                types.InlineKeyboardButton("🧾 Прикрепить чек", callback_data=f"attach_check:{product.pk}")
+                types.InlineKeyboardButton(
+                    "🧾 Прикрепить чек", callback_data=f"attach_check:{product.pk}"
+                )
             )
-            if "http://" in str(product.products.photo) or "https://" in str(product.products.photo):
-                await message.answer_photo(
-                    str(product.products.photo), caption=text, reply_markup=inlineh1
-                )
-            elif "media/users/" in str(product.products.photo):
-                await message.answer_photo(
-                    open(str(product.products.photo), "rb"), caption=text, reply_markup=inlineh1
-                )
+
+            photos = [ph.photo for ph in product.products.all()]
+            inlineh2 = types.InlineKeyboardMarkup()
+            inlineh2.row(
+                types.InlineKeyboardButton("Скрыть", callback_data=f"message_hide")
+            )
+            if None in photos: pass
             else:
-                await message.answer(text, reply_markup=inlineh1)
+                for p in photos:
+                    await message.answer_photo(photo=p, reply_markup=inlineh2)
+            await message.answer(text, reply_markup=inlineh1)
+
     else:
         await message.answer("❌ Ничего не найдено")
 
@@ -655,13 +678,16 @@ async def employees(message: types.Message):
         types.InlineKeyboardButton("🚗 В дороге", callback_data="oj_drive"),
     )
     inlineh1.row(
+        types.InlineKeyboardButton(
+            "❗ Нет в наличии ❗", callback_data="oj_net_v_nalichii"
+    ))
+    inlineh1.row(
         types.InlineKeyboardButton("❌ Дорожный брак", callback_data="oj_dorozh_brak"),
         types.InlineKeyboardButton("❌ Фабричный брак", callback_data="oj_fabr_brak"),
     )
     inlineh1.row(
         types.InlineKeyboardButton("✅ Доставлено", callback_data="oj_delevired"),
         types.InlineKeyboardButton("❎ Ожидающие товары", callback_data="oj_pr"),
-
     )
 
     inlineh1.row(
@@ -674,6 +700,40 @@ async def employees(message: types.Message):
     await cloud()
 
 
+# Нет в наличии
+@dp.callback_query_handler(text_startswith="oj_net_v_nalichii", state="*")
+async def add_employeees(call: types.CallbackQuery, state: FSMContext):
+    products = await net_v_nalichii()
+
+    if len(products) >= 1:
+        for product in products:
+            orig_product = product.products.all()
+            text = ""
+            for t in orig_product:
+                text += f"Товар: {t.product}\nКоличество: {t.count}\n\n"
+
+            txt = await get_message_from_product(product)
+            text += txt
+
+            inlineh1 = types.InlineKeyboardMarkup()
+            inlineh1.row(
+                types.InlineKeyboardButton("Скрыть", callback_data=f"message_hide")
+            )
+
+            photos = [ph.photo for ph in product.products.all()]
+            inlineh2 = types.InlineKeyboardMarkup()
+            inlineh2.row(
+                types.InlineKeyboardButton("Скрыть", callback_data=f"message_hide")
+            )
+            if None in photos: pass
+            else:
+                for p in photos:
+                    await call.message.answer_photo(photo=p, reply_markup=inlineh2)
+            await call.message.answer(text, reply_markup=inlineh1)
+
+    else:
+        await call.message.answer("❌ Ничего не найдено")
+
 # Ожидающие товары oj_pr
 @dp.callback_query_handler(text_startswith="oj_pr", state="*")
 async def add_employeees(call: types.CallbackQuery, state: FSMContext):
@@ -681,23 +741,27 @@ async def add_employeees(call: types.CallbackQuery, state: FSMContext):
 
     if len(products) >= 1:
         for product in products:
-            text = f"Товар: {product}\nКоличество: {product.count}\n" \
-                   f"Оптовая цена: {product.opt_price}\nСумма товара: {product.product_suum}\n" \
-                   f"2.5% от Суммы Товара: {product.product_percent}"
+            text = (
+                f"Товар: {product}\nКоличество: {product.count}\n"
+                f"Оптовая цена: {product.opt_price}\nСумма товара: {product.product_suum}\n"
+                f"2.5% от Суммы Товара: {product.product_percent}"
+            )
             inlineh1 = types.InlineKeyboardMarkup()
             inlineh1.row(
                 types.InlineKeyboardButton("Скрыть", callback_data=f"message_hide")
             )
-            if "http://" in str(product.photo) or "https://" in str(product.photo):
-                await call.message.answer_photo(
-                    str(product.photo), caption=text, reply_markup=inlineh1
-                )
-            elif "media/users/" in str(product.photo):
-                await call.message.answer_photo(
-                    open(str(product.photo), "rb"), caption=text, reply_markup=inlineh1
-                )
+
+            photos = [ph.photo for ph in product.products.all()]
+            inlineh2 = types.InlineKeyboardMarkup()
+            inlineh2.row(
+                types.InlineKeyboardButton("Скрыть", callback_data=f"message_hide")
+            )
+            if None in photos: pass
             else:
-                await call.message.answer(text, reply_markup=inlineh1)
+                for p in photos:
+                    await call.message.answer_photo(photo=p, reply_markup=inlineh2)
+            await call.message.answer(text, reply_markup=inlineh1)
+
     else:
         await call.message.answer("❌ Ничего не найдено")
 
@@ -709,21 +773,24 @@ async def add_employeees(call: types.CallbackQuery, state: FSMContext):
 
     if len(products) >= 1:
         for product in products:
-            text = f"Информация о доставке: {str(product.delivery_information).replace('None', 'Отсутствует')}\nПримечание: {product.note}\nАдресс: {product.address}\nТовар: {product.product}\nЦена: {product.price}\nНомер: {product.phone}\nВладелец товара: @{product.user.username} ({product.user.role})\n\nID: {product.pk}\nЛокация водителя: {str(product.location).replace('None', 'Неизвестно')}\nИзменение локации было в: {str(product.time_update_location).split('.')[0]}"
+            cout_bool = await count_bool(product=product)
+            text = await get_message_from_product(product)
             inlineh1 = types.InlineKeyboardMarkup()
             inlineh1.row(
                 types.InlineKeyboardButton("Скрыть", callback_data=f"message_hide")
             )
-            if "http://" in str(product.products.photo) or "https://" in str(product.products.photo):
-                await call.message.answer_photo(
-                    str(product.products.photo), caption=text, reply_markup=inlineh1
-                )
-            elif "media/users/" in str(product.products.photo):
-                await call.message.answer_photo(
-                    open(str(product.products.photo), "rb"), caption=text, reply_markup=inlineh1
-                )
+
+            photos = [ph.photo for ph in product.products.all()]
+            inlineh2 = types.InlineKeyboardMarkup()
+            inlineh2.row(
+                types.InlineKeyboardButton("Скрыть", callback_data=f"message_hide")
+            )
+            if None in photos: pass
             else:
-                await call.message.answer(text, reply_markup=inlineh1)
+                for p in photos:
+                    await call.message.answer_photo(photo=p, reply_markup=inlineh2)
+            await call.message.answer(text, reply_markup=inlineh1)
+
     else:
         pass
 
@@ -734,21 +801,24 @@ async def add_employeees(call: types.CallbackQuery, state: FSMContext):
     products = await fabr_brack_products()
     if len(products) >= 1:
         for product in products:
-            text = f"Информация о доставке: {str(product.delivery_information).replace('None', 'Отсутствует')}\nПримечание: {product.note}\nАдресс: {product.address}\nТовар: {product.product}\nЦена: {product.price}\nНомер: {product.phone}\nВладелец товара: @{product.user.username} ({product.user.role})\n\nID: {product.pk}\nЛокация водителя: {str(product.location).replace('None', 'Неизвестно')}\nИзменение локации было в: {str(product.time_update_location).split('.')[0]}"
+            cout_bool = await count_bool(product=product)
+            text = await get_message_from_product(product)
             inlineh1 = types.InlineKeyboardMarkup()
             inlineh1.row(
                 types.InlineKeyboardButton("Скрыть", callback_data=f"message_hide")
             )
-            if "http://" in str(product.products.photo) or "https://" in str(product.products.photo):
-                await call.message.answer_photo(
-                    str(product.products.photo), caption=text, reply_markup=inlineh1
-                )
-            elif "media/users/" in str(product.products.photo):
-                await call.message.answer_photo(
-                    open(str(product.products.photo), "rb"), caption=text, reply_markup=inlineh1
-                )
+
+            photos = [ph.photo for ph in product.products.all()]
+            inlineh2 = types.InlineKeyboardMarkup()
+            inlineh2.row(
+                types.InlineKeyboardButton("Скрыть", callback_data=f"message_hide")
+            )
+            if None in photos: pass
             else:
-                await call.message.answer(text, reply_markup=inlineh1)
+                for p in photos:
+                    await call.message.answer_photo(photo=p, reply_markup=inlineh2)
+            await call.message.answer(text, reply_markup=inlineh1)
+
     else:
         await call.message.answer("❌ Ничего не найдено")
 
@@ -759,21 +829,23 @@ async def add_employeees(call: types.CallbackQuery, state: FSMContext):
     products = await dorozh_brak_products()
     if len(products) >= 1:
         for product in products:
-            text = f"Информация о доставке: {str(product.delivery_information).replace('None', 'Отсутствует')}\nПримечание: {product.note}\nАдресс: {product.address}\nТовар: {product.product}\nЦена: {product.price}\nНомер: {product.phone}\nВладелец товара: @{product.user.username} ({product.user.role})\n\nID: {product.pk}\nЛокация водителя: {str(product.location).replace('None', 'Неизвестно')}\nИзменение локации было в: {str(product.time_update_location).split('.')[0]}"
+            cout_bool = await count_bool(product=product)
+            text = await get_message_from_product(product)
             inlineh1 = types.InlineKeyboardMarkup()
             inlineh1.row(
                 types.InlineKeyboardButton("Скрыть", callback_data=f"message_hide")
             )
-            if "http://" in str(product.products.photo) or "https://" in str(product.products.photo):
-                await call.message.answer_photo(
-                    str(product.products.photo), caption=text, reply_markup=inlineh1
-                )
-            elif "media/users/" in str(product.products.photo):
-                await call.message.answer_photo(
-                    open(str(product.products.photo), "rb"), caption=text, reply_markup=inlineh1
-                )
-            else:
-                await call.message.answer(text, reply_markup=inlineh1)
+
+            photos = [ph.photo for ph in product.products.all()]
+            inlineh2 = types.InlineKeyboardMarkup()
+            inlineh2.row(
+                types.InlineKeyboardButton("Скрыть", callback_data=f"message_hide")
+            )
+            if photos:
+                for p in photos:
+                    await call.message.answer_photo(photo=p, reply_markup=inlineh2)
+            await call.message.answer(text, reply_markup=inlineh1)
+
     else:
         await call.message.answer("❌ Ничего не найдено")
 
@@ -784,21 +856,24 @@ async def add_employeees(call: types.CallbackQuery, state: FSMContext):
     products = await get_drive_pr()
     if len(products) >= 1:
         for product in products:
-            text = f"Информация о доставке: {str(product.delivery_information).replace('None', 'Отсутствует')}\nПримечание: {product.note}\nАдресс: {product.address}\nТовар: {product.product}\nЦена: {product.price}\nНомер: {product.phone}\nВладелец товара: @{product.user.username} ({product.user.role})\n\nID: {product.pk}\nЛокация водителя: {str(product.location).replace('None', 'Неизвестно')}\nИзменение локации было в: {str(product.time_update_location).split('.')[0]}"
+            cout_bool = await count_bool(product=product)
+            text = await get_message_from_product(product)
             inlineh1 = types.InlineKeyboardMarkup()
             inlineh1.row(
                 types.InlineKeyboardButton("Скрыть", callback_data=f"message_hide")
             )
-            if "http://" in str(product.products.photo) or "https://" in str(product.products.photo):
-                await call.message.answer_photo(
-                    str(product.products.photo), caption=text, reply_markup=inlineh1
-                )
-            elif "media/users/" in str(product.products.photo):
-                await call.message.answer_photo(
-                    open(str(product.products.photo), "rb"), caption=text, reply_markup=inlineh1
-                )
+
+            photos = [ph.photo for ph in product.products.all()]
+            inlineh2 = types.InlineKeyboardMarkup()
+            inlineh2.row(
+                types.InlineKeyboardButton("Скрыть", callback_data=f"message_hide")
+            )
+            if None in photos: pass
             else:
-                await call.message.answer(text, reply_markup=inlineh1)
+                for p in photos:
+                    await call.message.answer_photo(photo=p, reply_markup=inlineh2)
+            await call.message.answer(text, reply_markup=inlineh1)
+
     else:
         await call.message.answer("❌ Ничего не найдено")
 
@@ -809,21 +884,24 @@ async def add_employeees(call: types.CallbackQuery, state: FSMContext):
     products = await get_dispatchers()
     if len(products) >= 1:
         for product in products:
-            text = f"Информация о доставке: {str(product.delivery_information).replace('None', 'Отсутствует')}\nПримечание: {product.note}\nАдресс: {product.address}\nТовар: {product.product}\nЦена: {product.price}\nНомер: {product.phone}\nВладелец товара: @{product.user.username} ({product.user.role})\n\nID: {product.pk}\nЛокация водителя: {str(product.location).replace('None', 'Неизвестно')}\nИзменение локации было в: {str(product.time_update_location).split('.')[0]}"
+            cout_bool = await count_bool(product=product)
+            text = await get_message_from_product(product)
             inlineh1 = types.InlineKeyboardMarkup()
             inlineh1.row(
                 types.InlineKeyboardButton("Скрыть", callback_data=f"message_hide")
             )
-            if "http://" in str(product.products.photo) or "https://" in str(product.products.photo):
-                await call.message.answer_photo(
-                    str(product.products.photo), caption=text, reply_markup=inlineh1
-                )
-            elif "media/users/" in str(product.products.photo):
-                await call.message.answer_photo(
-                    open(str(product.products.photo), "rb"), caption=text, reply_markup=inlineh1
-                )
+
+            photos = [ph.photo for ph in product.products.all()]
+            inlineh2 = types.InlineKeyboardMarkup()
+            inlineh2.row(
+                types.InlineKeyboardButton("Скрыть", callback_data=f"message_hide")
+            )
+            if None in photos: pass
             else:
-                await call.message.answer(text, reply_markup=inlineh1)
+                for p in photos:
+                    await call.message.answer_photo(photo=p, reply_markup=inlineh2)
+            await call.message.answer(text, reply_markup=inlineh1)
+
     else:
         await call.message.answer("❌ Ничего не найдено")
 
@@ -834,21 +912,24 @@ async def add_employeees(call: types.CallbackQuery, state: FSMContext):
     products = await get_packers()
     if len(products) >= 1:
         for product in products:
-            text = f"Информация о доставке: {str(product.delivery_information).replace('None', 'Отсутствует')}\nПримечание: {product.note}\nАдресс: {product.address}\nТовар: {product.product}\nЦена: {product.price}\nНомер: {product.phone}\nВладелец товара: @{product.user.username} ({product.user.role})\n\nID: {product.pk}\nЛокация водителя: {str(product.location).replace('None', 'Неизвестно')}\nИзменение локации было в: {str(product.time_update_location).split('.')[0]}"
+            cout_bool = await count_bool(product=product)
+            text = await get_message_from_product(product)
             inlineh1 = types.InlineKeyboardMarkup()
             inlineh1.row(
                 types.InlineKeyboardButton("Скрыть", callback_data=f"message_hide")
             )
-            if "http://" in str(product.products.photo) or "https://" in str(product.products.photo):
-                await call.message.answer_photo(
-                    str(product.products.photo), caption=text, reply_markup=inlineh1
-                )
-            elif "media/users/" in str(product.products.photo):
-                await call.message.answer_photo(
-                    open(str(product.products.photo), "rb"), caption=text, reply_markup=inlineh1
-                )
+
+            photos = [ph.photo for ph in product.products.all()]
+            inlineh2 = types.InlineKeyboardMarkup()
+            inlineh2.row(
+                types.InlineKeyboardButton("Скрыть", callback_data=f"message_hide")
+            )
+            if None in photos: pass
             else:
-                await call.message.answer(text, reply_markup=inlineh1)
+                for p in photos:
+                    await call.message.answer_photo(photo=p, reply_markup=inlineh2)
+            await call.message.answer(text, reply_markup=inlineh1)
+
     else:
         await call.message.answer("❌ Ничего не найдено")
 
@@ -859,21 +940,24 @@ async def add_employeees(call: types.CallbackQuery, state: FSMContext):
     products = await get_canceled()
     if len(products) >= 1:
         for product in products:
-            text = f"Информация о доставке: {str(product.delivery_information).replace('None', 'Отсутствует')}\nПримечание: {product.note}\nАдресс: {product.address}\nТовар: {product.product}\nЦена: {product.price}\nНомер: {product.phone}\nВладелец товара: @{product.user.username} ({product.user.role})\n\nID: {product.pk}\nЛокация водителя: {str(product.location).replace('None', 'Неизвестно')}\nИзменение локации было в: {str(product.time_update_location).split('.')[0]}"
+            cout_bool = await count_bool(product=product)
+            text = await get_message_from_product(product)
             inlineh1 = types.InlineKeyboardMarkup()
             inlineh1.row(
                 types.InlineKeyboardButton("Скрыть", callback_data=f"message_hide")
             )
-            if "http://" in str(product.products.photo) or "https://" in str(product.products.photo):
-                await call.message.answer_photo(
-                    str(product.products.photo), caption=text, reply_markup=inlineh1
-                )
-            elif "media/users/" in str(product.products.photo):
-                await call.message.answer_photo(
-                    open(str(product.products.photo), "rb"), caption=text, reply_markup=inlineh1
-                )
+
+            photos = [ph.photo for ph in product.products.all()]
+            inlineh2 = types.InlineKeyboardMarkup()
+            inlineh2.row(
+                types.InlineKeyboardButton("Скрыть", callback_data=f"message_hide")
+            )
+            if None in photos: pass
             else:
-                await call.message.answer(text, reply_markup=inlineh1)
+                for p in photos:
+                    await call.message.answer_photo(photo=p, reply_markup=inlineh2)
+            await call.message.answer(text, reply_markup=inlineh1)
+
     else:
         await call.message.answer("❌ Ничего не найдено")
 
@@ -887,23 +971,25 @@ async def add_employeees(call: types.CallbackQuery, state: FSMContext):
     else:
         if len(products) >= 1:
             for product in products:
-                text = f"Информация о доставке: {str(product.delivery_information).replace('None', 'Отсутствует')}\nПримечание: {product.note}\nАдресс: {product.address}\nТовар: {product.product}\nЦена: {product.price}\nНомер: {product.phone}\nВладелец товара: @{product.user.username} ({product.user.role})\n\nID: {product.pk}\nЛокация водителя: {str(product.location).replace('None', 'Неизвестно')}\nИзменение локации было в: {str(product.time_update_location).split('.')[0]}"
+                cout_bool = await count_bool(product=product)
+                text = await get_message_from_product(product)
                 inlineh1 = types.InlineKeyboardMarkup()
                 inlineh1.row(
                     types.InlineKeyboardButton("Скрыть", callback_data=f"message_hide")
                 )
-                if "http://" in str(product.products.photo) or "https://" in str(product.products.photo):
-                    await call.message.answer_photo(
-                        str(product.products.photo), caption=text, reply_markup=inlineh1
-                    )
-                elif "media/users/" in str(product.products.photo):
-                    await call.message.answer_photo(
-                        open(str(product.products.photo), "rb"),
-                        caption=text,
-                        reply_markup=inlineh1,
-                    )
+
+                photos = [ph.photo for ph in product.products.all()]
+                inlineh2 = types.InlineKeyboardMarkup()
+                inlineh2.row(
+                    types.InlineKeyboardButton("Скрыть", callback_data=f"message_hide")
+                )
+                if None in photos:
+                    pass
                 else:
-                    await call.message.answer(text, reply_markup=inlineh1)
+                    for p in photos:
+                        await call.message.answer_photo(photo=p, reply_markup=inlineh2)
+                await call.message.answer(text, reply_markup=inlineh1)
+
         else:
             await call.message.answer("❌ Ничего не найдено")
 
@@ -914,21 +1000,24 @@ async def add_employeees(call: types.CallbackQuery, state: FSMContext):
     products = await get_ojid_confirmed()
     if len(products) >= 1:
         for product in products:
-            text = f"Информация о доставке: {str(product.delivery_information).replace('None', 'Отсутствует')}\nПримечание: {product.note}\nАдресс: {product.address}\nТовар: {product.product}\nЦена: {product.price}\nНомер: {product.phone}\nВладелец товара: @{product.user.username} ({product.user.role})\n\nID: {product.pk}\nЛокация водителя: {str(product.location).replace('None', 'Неизвестно')}\nИзменение локации было в: {str(product.time_update_location).split('.')[0]}"
+            cout_bool = await count_bool(product=product)
+            text = await get_message_from_product(product)
             inlineh1 = types.InlineKeyboardMarkup()
             inlineh1.row(
                 types.InlineKeyboardButton("Скрыть", callback_data=f"message_hide")
             )
-            if "http://" in str(product.products.photo) or "https://" in str(product.products.photo):
-                await call.message.answer_photo(
-                    str(product.products.photo), caption=text, reply_markup=inlineh1
-                )
-            elif "media/users/" in str(product.products.photo):
-                await call.message.answer_photo(
-                    open(str(product.products.photo), "rb"), caption=text, reply_markup=inlineh1
-                )
+
+            photos = [ph.photo for ph in product.products.all()]
+            inlineh2 = types.InlineKeyboardMarkup()
+            inlineh2.row(
+                types.InlineKeyboardButton("Скрыть", callback_data=f"message_hide")
+            )
+            if None in photos: pass
             else:
-                await call.message.answer(text, reply_markup=inlineh1)
+                for p in photos:
+                    await call.message.answer_photo(photo=p, reply_markup=inlineh2)
+            await call.message.answer(text, reply_markup=inlineh1)
+
     else:
         await call.message.answer("❌ Ничего не найдено")
 
@@ -938,7 +1027,8 @@ async def employees(message: types.Message):
     products = await get_confirmed_products()
     if len(products) >= 1:
         for product in products:
-            text = f"Информация о доставке: {str(product.delivery_information).replace('None', 'Отсутствует')}\nПримечание: {product.note}\nАдресс: {product.address}\nТовар: {product.product}\nЦена: {product.price}\nНомер: {product.phone}\nВладелец товара: @{product.user.username} ({product.user.role})\n\nID: {product.pk}\nЛокация водителя: {str(product.location).replace('None', 'Неизвестно')}\nИзменение локации было в: {str(product.time_update_location).split('.')[0]}"
+            cout_bool = await count_bool(product=product)
+            text = await get_message_from_product(product)
             inlineh1 = types.InlineKeyboardMarkup()
             inlineh1.row(
                 types.InlineKeyboardButton(
@@ -946,16 +1036,18 @@ async def employees(message: types.Message):
                     callback_data=f"confirmed_request:{product.pk}",
                 )
             )
-            if "http://" in str(product.products.photo) or "https://" in str(product.products.photo):
-                await message.answer_photo(
-                    str(product.products.photo), caption=text, reply_markup=inlineh1
-                )
-            elif "media/users/" in str(product.products.photo):
-                await message.answer_photo(
-                    open(str(product.products.photo), "rb"), caption=text, reply_markup=inlineh1
-                )
+
+            photos = [ph.photo for ph in product.products.all()]
+            inlineh2 = types.InlineKeyboardMarkup()
+            inlineh2.row(
+                types.InlineKeyboardButton("Скрыть", callback_data=f"message_hide")
+            )
+            if None in photos: pass
             else:
-                await message.answer(text, reply_markup=inlineh1)
+                for p in photos:
+                    await message.answer_photo(photo=p, reply_markup=inlineh2)
+            await message.answer(text, reply_markup=inlineh1)
+
     else:
         await message.answer("Пока нет подтвержденных заявок.")
     await cloud()
@@ -993,19 +1085,22 @@ async def employees(message: types.Message):
             inlineh1 = types.InlineKeyboardMarkup()
             inlineh1.row(
                 types.InlineKeyboardButton(
-                    "✅ Передан диспетчеру", callback_data=f"confirmed2_request:{product.pk}"
+                    "✅ Передан диспетчеру",
+                    callback_data=f"confirmed2_request:{product.pk}",
                 )
             )
-            if "http://" in str(product.products.photo) or "https://" in str(product.products.photo):
-                await message.answer_photo(
-                    str(product.products.photo), caption=text, reply_markup=inlineh1
-                )
-            elif "media/users/" in str(product.products.photo):
-                await message.answer_photo(
-                    open(str(product.products.photo), "rb"), caption=text, reply_markup=inlineh1
-                )
+
+            photos = [ph.photo for ph in product.products.all()]
+            inlineh2 = types.InlineKeyboardMarkup()
+            inlineh2.row(
+                types.InlineKeyboardButton("Скрыть", callback_data=f"message_hide")
+            )
+            if None in photos: pass
             else:
-                await message.answer(text, reply_markup=inlineh1)
+                for p in photos:
+                    await message.answer_photo(photo=p, reply_markup=inlineh2)
+            await message.answer(text, reply_markup=inlineh1)
+
     else:
         await message.answer("Пока нет заявок для упаковки.")
     await cloud()
@@ -1044,7 +1139,8 @@ async def employees(message: types.Message):
 
     if len(products) >= 1:
         for product in products:
-            text = f"Информация о доставке: {str(product.delivery_information).replace('None', 'Отсутствует')}\nПримечание: {product.note}\nАдресс: {product.address}\nТовар: {product.product}\nЦена: {product.price}\nНомер: {product.phone}\nВладелец товара: @{product.user.username} ({product.user.role})\n\nID: {product.pk}\nЛокация водителя: {str(product.location).replace('None', 'Неизвестно')}\nИзменение локации было в: {str(product.time_update_location).split('.')[0]}"
+            cout_bool = await count_bool(product=product)
+            text = await get_message_from_product(product)
             inlineh1 = types.InlineKeyboardMarkup()
             inlineh1.row(
                 types.InlineKeyboardButton(
@@ -1052,16 +1148,18 @@ async def employees(message: types.Message):
                     callback_data=f"conf_r_request:{product.pk}",
                 )
             )
-            if "http://" in str(product.products.photo) or "https://" in str(product.products.photo):
-                await message.answer_photo(
-                    str(product.products.photo), caption=text, reply_markup=inlineh1
-                )
-            elif "media/users/" in str(product.products.photo):
-                await message.answer_photo(
-                    open(str(product.products.photo), "rb"), caption=text, reply_markup=inlineh1
-                )
+
+            photos = [ph.photo for ph in product.products.all()]
+            inlineh2 = types.InlineKeyboardMarkup()
+            inlineh2.row(
+                types.InlineKeyboardButton("Скрыть", callback_data=f"message_hide")
+            )
+            if None in photos: pass
             else:
-                await message.answer(text, reply_markup=inlineh1)
+                for p in photos:
+                    await message.answer_photo(photo=p, reply_markup=inlineh2)
+            await message.answer(text, reply_markup=inlineh1)
+
     else:
         await message.answer("У вас нет активных заявок на доставку.")
     await cloud()
@@ -1112,17 +1210,20 @@ async def employees(message: types.Message):
                     "🗺 Получить геолокацию", callback_data=f"location_dr:{product.pk}"
                 )
             )
-            text = f"Информация о доставке: {str(product.delivery_information).replace('None', 'Отсутствует')}\nПримечание: {product.note}\nАдресс: {product.address}\nТовар: {product.product}\nЦена: {product.price}\nНомер: {product.phone}\nВладелец товара: @{product.user.username} ({product.user.role})\n\nID: {product.pk}\nЛокация водителя: {str(product.location).replace('None', 'Неизвестно')}\nИзменение локации было в: {str(product.time_update_location).split('.')[0]}"
-            if "http://" in str(product.products.photo) or "https://" in str(product.products.photo):
-                await message.answer_photo(
-                    str(product.products.photo), caption=text, reply_markup=inlineh1
-                )
-            elif "media/users/" in str(product.products.photo):
-                await message.answer_photo(
-                    open(str(product.products.photo), "rb"), caption=text, reply_markup=inlineh1
-                )
+            cout_bool = await count_bool(product=product)
+            text = await get_message_from_product(product)
+
+            photos = [ph.photo for ph in product.products.all()]
+            inlineh2 = types.InlineKeyboardMarkup()
+            inlineh2.row(
+                types.InlineKeyboardButton("Скрыть", callback_data=f"message_hide")
+            )
+            if None in photos: pass
             else:
-                await message.answer(text, reply_markup=inlineh1)
+                for p in photos:
+                    await message.answer_photo(photo=p, reply_markup=inlineh2)
+            await message.answer(text, reply_markup=inlineh1)
+
     else:
         await message.answer("❌ Товары отсутствуют")
     await cloud()
@@ -1157,11 +1258,11 @@ async def employees(message: types.Message, state: FSMContext):
             "🗺 Получить геолокацию", callback_data=f"location_dr:{product.pk}"
         )
     )
-
+    cout_bool = await count_bool(product=product)
     if product.status == "Доставлен" or "В дороге" == product.status:
-        text = f"Информация о доставке: {str(product.delivery_information).replace('None', 'Отсутствует')}\nПримечание: {product.note}\nАдресс: {product.address}\nТовар: {product.product}\nЦена: {product.price}\nНомер: {product.phone}\nВладелец товара: @{product.user.username} ({product.user.role})\n\nID: {product.pk}\nЛокация водителя: {str(product.location).replace('None', 'Неизвестно')}\nИзменение локации было в: {str(product.time_update_location).split('.')[0]}\nСтатус заявки: {product.status}"
+        text = f"Информация о доставке: {str(product.delivery_information).replace('None', 'Отсутствует')}\nПримечание: {product.note}\nАдресс: {product.address}\nТовар: {product.product}\nЦена: {product.price}\nНомер: {product.phone}\nВладелец товара: @{product.user.username} ({product.user.role})\n\nID: {product.pk}\nЛокация водителя: {str(product.location).replace('None', 'Неизвестно')}\nИзменение локации было в: {str(product.time_update_location).split('.')[0]}\nСтатус заявки: {product.status}\n{cout_bool}"
     else:
-        text = f"Информация о доставке: {str(product.delivery_information).replace('None', 'Отсутствует')}\nПримечание: {product.note}\nАдресс: {product.address}\nТовар: {product.product}\nЦена: {product.price}\nНомер: {product.phone}\nЗагрузил товар: @{product.user.username} ({product.user.role})\n\nID: {product.pk}\nЛокация водителя: {str(product.location).replace('None', 'Неизвестно')}\nИзменение локации было в: {str(product.time_update_location).split('.')[0]}\nСтатус заявки: Подготавливается к отправке"
+        text = f"Информация о доставке: {str(product.delivery_information).replace('None', 'Отсутствует')}\nПримечание: {product.note}\nАдресс: {product.address}\nТовар: {product.product}\nЦена: {product.price}\nНомер: {product.phone}\nЗагрузил товар: @{product.user.username} ({product.user.role})\n\nID: {product.pk}\nЛокация водителя: {str(product.location).replace('None', 'Неизвестно')}\nИзменение локации было в: {str(product.time_update_location).split('.')[0]}\nСтатус заявки: Подготавливается к отправке\n{cout_bool}"
 
     await message.answer(text, reply_markup=inlineh1)
     await cloud()
@@ -1172,8 +1273,8 @@ async def employees(message: types.Message):
     products = await pack_to_logist()
     if len(products) >= 1:
         for product in products:
-
-            text = f"Информация о доставке: {str(product.delivery_information).replace('None', 'Отсутствует')}\nПримечание: {product.note}\nАдресс: {product.address}\nТовар: {product.product}\nЦена: {product.price}\nНомер: {product.phone}\nВладелец товара: @{product.user.username} ({product.user.role})\n\nID: {product.pk}\nЛокация водителя: {str(product.location).replace('None', 'Неизвестно')}\nИзменение локации было в: {str(product.time_update_location).split('.')[0]}"
+            cout_bool = count_bool(product=product)
+            text = await get_message_from_product(product)
 
             drivers = await get_all_drivers()
             inlineh1 = types.InlineKeyboardMarkup()
@@ -1193,16 +1294,17 @@ async def employees(message: types.Message):
                     )
                 )
 
-            if "http://" in str(product.products.photo) or "https://" in str(product.products.photo):
-                await message.answer_photo(
-                    str(product.products.photo), caption=text, reply_markup=inlineh1
-                )
-            elif "media/users/" in str(product.products.photo):
-                await message.answer_photo(
-                    open(str(product.products.photo), "rb"), caption=text, reply_markup=inlineh1
-                )
+            photos = [ph.photo for ph in product.products.all()]
+            inlineh2 = types.InlineKeyboardMarkup()
+            inlineh2.row(
+                types.InlineKeyboardButton("Скрыть", callback_data=f"message_hide")
+            )
+            if None in photos: pass
             else:
-                await message.answer(text, reply_markup=inlineh1)
+                for p in photos:
+                    await message.answer_photo(photo=p, reply_markup=inlineh2)
+            await message.answer(text, reply_markup=inlineh1)
+
     else:
         await message.answer("Пока нет упакованных заявок.")
     await cloud()
@@ -1218,7 +1320,8 @@ async def add_employeees(call: types.CallbackQuery, state: FSMContext):
     user_id = user.user_id
 
     if product:
-        text = f"Информация о доставке: {str(product.delivery_information).replace('None', 'Отсутствует')}\nПримечание: {product.note}\nАдресс: {product.address}\nТовар: {product.product}\nЦена: {product.price}\nНомер: {product.phone}\nВладелец товара: @{product.user.username} ({product.user.role})\n\nID: {product.pk}\nЛокация водителя: {str(product.location).replace('None', 'Неизвестно')}\nИзменение локации было в: {str(product.time_update_location).split('.')[0]}"
+        cout_bool = await count_bool(product=product)
+        text = await get_message_from_product(product)
         inlineh1 = types.InlineKeyboardMarkup()
         inlineh1.row(
             types.InlineKeyboardButton(
@@ -1226,22 +1329,25 @@ async def add_employeees(call: types.CallbackQuery, state: FSMContext):
             )
         )
 
-        if "http://" in str(product.products.photo) or "https://" in str(product.products.photo):
-            await bot.send_photo(
-                chat_id=user_id,
-                photo=str(product.products.photo),
-                caption=text,
-                reply_markup=inlineh1,
-            )
-        elif "media/users/" in str(product.products.photo):
-            await bot.send_photo(
-                chat_id=user_id,
-                photo=open(str(product.products.photo), "rb"),
-                caption=text,
-                reply_markup=inlineh1,
-            )
+        photos = [ph.photo for ph in product.products.all()]
+        inlineh2 = types.InlineKeyboardMarkup()
+        inlineh2.row(
+            types.InlineKeyboardButton("Скрыть", callback_data=f"message_hide")
+        )
+
+
+        if None in photos: pass
         else:
-            await bot.send_message(chat_id=user_id, text=text, reply_markup=inlineh1)
+            for p in photos:
+                await bot.send_photo(
+                    chat_id=user_id,
+                    photo=str(p),
+                    caption=text,
+                    reply_markup=inlineh2,
+                )
+
+        await bot.send_message(chat_id=user_id, text=text, reply_markup=inlineh1)
+
         await call.message.delete()
         await call.message.answer("✅ Успешно")
     else:
@@ -1293,18 +1399,17 @@ async def employees(message: types.Message, state: FSMContext):
             inlineh1.row(
                 types.InlineKeyboardButton(f"Скрыть", callback_data="message_hide")
             )
-
-            text = f"Информация о доставке: {str(product.delivery_information).replace('None', 'Отсутствует')}\nПримечание: {product.note}\nАдресс: {product.address}\nТовар: {product.product}\nЦена: {product.price}\nНомер: {product.phone}\nВладелец товара: @{product.user.username} ({product.user.role})\n\nID: {product.pk}\nЛокация водителя: {str(product.location).replace('None', 'Неизвестно')}\nИзменение локации было в: {str(product.time_update_location).split('.')[0]}"
-            if "http://" in str(product.products.photo) or "https://" in str(product.products.photo):
-                await message.answer_photo(
-                    str(product.products.photo), caption=text, reply_markup=inlineh1
-                )
-            elif "media/users/" in str(product.products.photo):
-                await message.answer_photo(
-                    open(str(product.products.photo), "rb"), caption=text, reply_markup=inlineh1
-                )
-            else:
-                await message.answer(text, reply_markup=inlineh1)
+            cout_bool = await count_bool(product=product)
+            text = await get_message_from_product(product)
+            photos = [ph.photo for ph in product.products.all()]
+            inlineh2 = types.InlineKeyboardMarkup()
+            inlineh2.row(
+                types.InlineKeyboardButton("Скрыть", callback_data=f"message_hide")
+            )
+            if photos:
+                for p in photos:
+                    await message.answer_photo(photo=p, reply_markup=inlineh2)
+            await message.answer(text, reply_markup=inlineh1)
     except Exception as ex:
         await message.answer(f"❌ Товар не найден ({ex})")
     await state.finish()

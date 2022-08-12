@@ -25,7 +25,7 @@ class Profile(models.Model):
 
 class Products(models.Model):
     product = models.CharField(max_length=1000, verbose_name="Товар")
-    count = models.PositiveIntegerField(verbose_name="Количество")
+    count = models.IntegerField(verbose_name="Количество")
     opt_price = models.PositiveIntegerField(verbose_name="Оптовая Цена")
     availability = models.BooleanField(default=True, verbose_name="Наличие")
     photo = models.CharField(max_length=3000, verbose_name="Фото", blank=True, null=True)
@@ -63,7 +63,8 @@ class Applications(models.Model):
     location_time = models.CharField(max_length=3000, verbose_name="Время локации", null=True, blank=True)
     time_update_location = models.DateTimeField(auto_now=True, verbose_name="Время изменения локации")
     user = models.ForeignKey(Profile, on_delete=models.PROTECT, verbose_name="Добавил")
-    products = models.ForeignKey(Products, on_delete=models.PROTECT, verbose_name="Привязанный товар")
+    products = models.ManyToManyField(Products, verbose_name="Привязанный товар")
+    bool_count = models.BooleanField(default=True, verbose_name="Хватает ли количество")
 
     def __str__(self):
         return str(self.product)

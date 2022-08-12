@@ -43,6 +43,7 @@ def get_report():
         "matchs": matchs,
         "matchs2": matchs2,
         "product_ended": product_ended,
+        "not_available": Applications.objects.filter(bool_count=False).count(),
     }
 
 

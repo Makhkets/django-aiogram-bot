@@ -1,3 +1,4 @@
+from pprint import pprint
 from django.contrib import admin
 
 from loguru import logger as l
@@ -35,7 +36,7 @@ class ApplicationsAdmin(admin.ModelAdmin):
 
 
 class ProductsAdmin(admin.ModelAdmin):
-    list_display = ('id', 'product', 'count', 'opt_price', "product_suum", "product_percent", 'availability')
+    list_display = ('id', 'product', 'count', 'opt_price', "product_suum", "product_percent", 'availability', "fake_count")
     search_fields = ['id', 'product', 'count', 'opt_price', 'availability']
     list_filter = ('availability',)
     list_editable = ('product', 'opt_price', 'count', 'product_suum')
@@ -45,21 +46,47 @@ class ProductsAdmin(admin.ModelAdmin):
 
     def save_model(self, request, obj, form, change):
 
-        if obj.fake_count <= obj.count:
-            obj.fake_count = obj.count
+        _ = obj.count # переменная для хранения изначального занчения obj.count
+        try:
+            old_obj = self.model.objects.get(id=obj.id)
+        except: pass
 
+
+        try:
+            if request.POST.get("count") is None:
+                obj.count = old_obj.count + obj.count
+            else:
+                obj.count = int(request.POST.get("count"))
+                obj.fake_count = obj.co
+        except Exception as ex:
+            obj.count = int(request.POST.get("count"))
+
+
+        if obj.fake_count != 0:
+            if obj.count <= 0:
+                pass
+            else:
+                obj.fake_count += obj.count
+
+        if obj.fake_count == 0:
+            obj.fake_count = obj.count
+        
         obj.product_suum = obj.opt_price * obj.fake_count
         obj.product_percent = ((obj.opt_price * obj.fake_count) // 100) * 2.5
         obj.product = obj.product.lower()
 
-        if obj.fake_count == 0:
-            obj.fake_count = obj.count
 
-        if obj.count == 0:
+
+        if obj.count <= 0:
             obj.availability = False
 
-        if obj.count != 0:
+        if obj.count > 0:
             obj.availability = True
+
+
+        if obj.count == 123456789:
+            l.critical(True)
+            obj.count = 2
 
         obj.save()
 
