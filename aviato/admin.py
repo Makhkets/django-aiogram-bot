@@ -36,7 +36,7 @@ class ApplicationsAdmin(admin.ModelAdmin):
 
 
 class ProductsAdmin(admin.ModelAdmin):
-    list_display = ('id', 'product', 'count', 'opt_price', "product_suum", "product_percent", 'availability', "fake_count")
+    list_display = ('id', 'product', 'count', 'opt_price', "product_suum", "product_percent", 'availability')
     search_fields = ['id', 'product', 'count', 'opt_price', 'availability']
     list_filter = ('availability',)
     list_editable = ('product', 'opt_price', 'count', 'product_suum')

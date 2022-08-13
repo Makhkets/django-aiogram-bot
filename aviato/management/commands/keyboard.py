@@ -43,6 +43,13 @@ def packer_menu():
     menu.row("⚡ Неупокованные заказы")
     return menu
 
+def supplier_menu():
+    menu = types.ReplyKeyboardMarkup(resize_keyboard=True)
+    menu.row("🛒 Изменить товар", "🎫 Добавить товар")
+    menu.row("✍ Добавить заявку", "💵 Заработок")
+    menu.row("❗ Нет в наличии ❗")
+    return menu
+
 def driver_menu():
     menu = types.ReplyKeyboardMarkup(resize_keyboard=True)
     menu.row("🚙 Активные заказы", "💡 Ожидающие чека") # Скрытая функция - 🕓 Заказы водителя
@@ -58,7 +65,7 @@ def employees_inline_menu():
 
 def employees_role_inline():
     inline_kb_full = types.InlineKeyboardMarkup()
-    inline_kb_full.row(types.InlineKeyboardButton("🗳️ Логист", callback_data="logist_code"))
+    inline_kb_full.row(types.InlineKeyboardButton("🗳️ Логист", callback_data="logist_code"), types.InlineKeyboardButton("👷‍♂️ Снабженец", callback_data="supplier_code"))
     inline_kb_full.row(types.InlineKeyboardButton("🛡️ Админ", callback_data="admin_code"), types.InlineKeyboardButton("⭐ Менеджер", callback_data="manager_code"))
     inline_kb_full.row(types.InlineKeyboardButton("👨‍💻 Оператор", callback_data="operator_code"), types.InlineKeyboardButton("🔧 Водитель", callback_data="driver_code"))
     inline_kb_full.row(types.InlineKeyboardButton("⚙️ Упаковщик", callback_data="packer_code"))
@@ -69,3 +76,5 @@ def question_photo():
     menu = types.ReplyKeyboardMarkup(resize_keyboard=True)
     menu.row("✅ Да есть фото", "❌ Фото отсутствует")
     return menu
+
+# callback supplier_code

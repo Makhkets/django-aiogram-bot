@@ -75,17 +75,12 @@ def product_edit(data, product_id):
     try:
         data = data.split("\n")
 
-        address = data[0].replace("нет", "").replace("Нет", "")
-        product = data[1].replace("нет", "").replace("Нет", "")
-        price = data[2].replace("нет", "").replace("Нет", "")
-        phone = data[3].replace("нет", "").replace("Нет", "")
+        product = data[0].replace("нет", "").replace("Нет", "")
+        address = data[1].replace("нет", "").replace("Нет", "")
+        phone = data[2].replace("нет", "").replace("Нет", "")
+        price = data[3].replace("нет", "").replace("Нет", "")
         note = data[4].replace("нет", "").replace("Нет", "")
-        photo = ""
 
-        if data[5] == "нет" or data[5] == "Нет":
-            pass
-        else:
-            photo = data[5]
 
         a = Applications.objects.get(pk=product_id)
         a.note = note
@@ -93,7 +88,6 @@ def product_edit(data, product_id):
         a.product = product
         a.phone = phone
         a.price = price
-        a.photo = photo
         a.save()
 
         return "✅ Товар успешно изменен"
@@ -645,3 +639,70 @@ def get_number_product(string):
 @sync_to_async
 def net_v_nalichii():
     return Applications.objects.filter(bool_count=False).exclude(status="Отменен").exclude(status="Доставлен")
+
+@sync_to_async
+def add_product_to_db(data):
+    try:
+        data = data.split("\n")
+
+        product = data[0]
+        count = data[1]
+        price = data[2]
+        photo = data[3]
+        P = None
+        if str(photo) == "-":
+            P = Products.objects.create(
+                product=product,
+                count=count,
+                opt_price=price,
+            )
+
+        elif "http" in str(photo):
+            P = Products.objects.create(
+                product=product,
+                count=count,
+                opt_price=price,
+                photo=photo
+            )
+
+        else: return "❌ Неправильно ведена ссылка на фото (если оно отсутствует введите прочерк ( - ) без скобок )"
+        P.product_suum = int(price) * int(count)
+        P.fake_count = count
+        P.product_percent = (int(price) * int(count)) / 100 * 2.5
+        P.save()
+        return "✅ Успешно добавлен товар"
+    except Exception as ex: return f"❌ Ошибка {str(ex)}"
+
+
+@sync_to_async
+def find_products_tovar(number):
+    try:
+        return Products.objects.get(pk=number)
+    except: pass
+    
+    try:
+        return Products.objects.get(pk=number)
+    except: pass
+
+    return False
+
+@sync_to_async
+def change_product_tv(product_id, product_product):
+    p = Products.objects.get(pk=product_id)
+    p.product = product_product
+    p.save()
+    return "✅ Успешно"
+
+@sync_to_async
+def change_price_tv(product_id, new_count):
+    p = Products.objects.get(pk=product_id)
+    p.count += int(new_count)
+    p.save()
+    return "✅ Успешно"
+
+@sync_to_async
+def сhange_opt(product_id, price):
+    p = Products.objects.get(pk=product_id)
+    p.opt_price = price
+    p.save()
+    return "✅ Успешно"
