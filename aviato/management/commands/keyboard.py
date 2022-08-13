@@ -16,7 +16,6 @@ def admin_menu():
     menu.row("💡 Ожидающие чека")
     menu.row("🛒 Изменить товар", "🎫 Добавить товар")
     menu.row("❗ Нет в наличии ❗")
-
     return menu
 
 
@@ -31,7 +30,6 @@ def operator_menu():
     menu.row("📔 Заявки", "⚒ Браки")
     menu.row("🌏 Поиск заявок", "📕 Отчет")
     menu.row("💡 Ожидающие чека")
-    
     return menu
 
 def logist_menu():
@@ -63,7 +61,6 @@ def employees_inline_menu():
     inline_kb_full = types.InlineKeyboardMarkup()
     inline_kb_full.row(types.InlineKeyboardButton("✅ Добавить сотрудника", callback_data="add_employees"))
     inline_kb_full.row(types.InlineKeyboardButton("❌ Изменить должность сотрудника", callback_data="remove_employees"))
-    
     return inline_kb_full
 
 def employees_role_inline():
@@ -72,12 +69,9 @@ def employees_role_inline():
     inline_kb_full.row(types.InlineKeyboardButton("🛡️ Админ", callback_data="admin_code"), types.InlineKeyboardButton("⭐ Менеджер", callback_data="manager_code"))
     inline_kb_full.row(types.InlineKeyboardButton("👨‍💻 Оператор", callback_data="operator_code"), types.InlineKeyboardButton("🔧 Водитель", callback_data="driver_code"))
     inline_kb_full.row(types.InlineKeyboardButton("⚙️ Упаковщик", callback_data="packer_code"))
-
     return inline_kb_full
 
 def question_photo():
     menu = types.ReplyKeyboardMarkup(resize_keyboard=True)
     menu.row("✅ Да есть фото", "❌ Фото отсутствует")
     return menu
-
-# callback supplier_code

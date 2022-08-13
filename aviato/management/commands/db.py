@@ -173,7 +173,7 @@ def product_save(user_id, data):
     a.products.set(PRODUCTS)
     a.save()
 
-    return "✅ Успешно добавил товар в базу"
+    return "✅ Успешно добавил заявку в базу"
 
 
 # except Exception as ex: return f"❌ Ошибка при загрузке товара ({ex})"

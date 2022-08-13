@@ -18,8 +18,9 @@ class ProfileAdmin(admin.ModelAdmin):
 
 class ApplicationsAdmin(admin.ModelAdmin):
     list_display = ('id', 'create_time', 'product', 'address', 'price',
-                    'phone', 'status', 'note',
-                    'driver', 'location', "delivery_information", 'bool_status', 'user')
+                    'phone', 'bool_status', 'status', 'note',
+                    'driver', 'location', "delivery_information", 'user')
+
     search_fields = ['id', 'note', 'address', 'phone', 'price',
                      'time_update_location', 'product',
                      'user__first_name', 'status', 'location']
@@ -36,7 +37,7 @@ class ApplicationsAdmin(admin.ModelAdmin):
 
 
 class ProductsAdmin(admin.ModelAdmin):
-    list_display = ('id', 'product', 'count', 'opt_price', "product_suum", "product_percent", 'availability')
+    list_display = ('id', 'availability', 'product', 'count', 'opt_price', "product_suum", "product_percent")
     search_fields = ['id', 'product', 'count', 'opt_price', 'availability']
     list_filter = ('availability',)
     list_editable = ('product', 'opt_price', 'count', 'product_suum')

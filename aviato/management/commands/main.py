@@ -62,13 +62,13 @@ async def count_bool(product):
 
 async def get_message_from_product(product):
     cout_bool = await count_bool(product=product)
-    text =  f"Примечание: {product.note}\nАдресс: {product.address}\n" \
+    text = f"{cout_bool}\n" \
+           f"Примечание: {product.note}\nАдресс: {product.address}\n" \
            f"Товар: {str(product.product).replace('[', '').replace(']', '')}\n" \
            f"Цена: {product.price}\nНомер: {product.phone}\n" \
            f"Владелец товара: @{product.user.username} ({product.user.role})\n\n" \
            f"ID: {product.pk}\nЛокация водителя: {str(product.location).replace('None', 'Неизвестно')}\n" \
-           f"Изменение локации было в: {str(product.time_update_location).split('.')[0]}\n" \
-           f"{cout_bool}"
+           f"Изменение локации было в: {str(product.time_update_location).split('.')[0]}\n"
 
     return text.replace("'", "")
 
@@ -456,7 +456,7 @@ async def code(message: types.Message, state: FSMContext):
     await get_menu(message)
     await cloud()
 
-####################################################################################################################
+
 @dp.message_handler(text="✍ Добавить заявку", state="*")
 async def userrequests(message: types.Message, state: FSMContext):
     await message.answer(
@@ -464,7 +464,7 @@ async def userrequests(message: types.Message, state: FSMContext):
     )
     await D.note.set()
     await cloud()
-####################################################################################################################
+
 
 @dp.message_handler(state=D.note)
 async def userrequests(message: types.Message, state: FSMContext):
@@ -511,11 +511,12 @@ async def employees(message: types.Message):
             inlineh2.row(
                 types.InlineKeyboardButton("Скрыть", callback_data=f"message_hide")
             )
-
-            if None in photos: pass
-            else:
-                for p in photos:
+            for p in photos:
+                try:
                     await message.answer_photo(photo=p, reply_markup=inlineh2)
+                except: pass
+
+
             await message.answer(text, reply_markup=inlineh1)
 
     else:
@@ -544,10 +545,10 @@ async def employees(message: types.Message):
             inlineh2.row(
                 types.InlineKeyboardButton("Скрыть", callback_data=f"message_hide")
             )
-            if None in photos: pass
-            else:
-                for p in photos:
+            for p in photos:
+                try:
                     await message.answer_photo(photo=p, reply_markup=inlineh2)
+                except: pass
             await message.answer(text, reply_markup=inlineh1)
 
     else:
@@ -596,12 +597,13 @@ async def employees(message: types.Message, state: FSMContext):
 
     photos = [ph.photo for ph in product.products.all()]
     inlineh2 = types.InlineKeyboardMarkup()
-    inlineh2.row(types.InlineKeyboardButton("Скрыть", callback_data=f"message_hide"))
-    if None in photos:
-        pass
-    else:
-        for p in photos:
+    inlineh2.row(
+        types.InlineKeyboardButton("Скрыть", callback_data=f"message_hide")
+    )
+    for p in photos:
+        try:
             await message.answer_photo(photo=p, reply_markup=inlineh2)
+        except: pass
     await message.answer(text, reply_markup=inlineh1)
 
 
@@ -652,10 +654,10 @@ async def dfs13fdsv(message: types.Message, state: FSMContext):
             inlineh2.row(
                 types.InlineKeyboardButton("Скрыть", callback_data=f"message_hide")
             )
-            if None in photos: pass
-            else:
-                for p in photos:
+            for p in photos:
+                try:
                     await message.answer_photo(photo=p, reply_markup=inlineh2)
+                except: pass
             await message.answer(text, reply_markup=inlineh1)
 
     else:
@@ -753,10 +755,10 @@ async def dfsfdslf(message: types.Message, state: FSMContext):
             inlineh2.row(
                 types.InlineKeyboardButton("Скрыть", callback_data=f"message_hide")
             )
-            if None in photos: pass
-            else:
-                for p in photos:
+            for p in photos:
+                try:
                     await message.answer_photo(photo=p, reply_markup=inlineh2)
+                except: pass
             await message.answer(text, reply_markup=inlineh1)
 
     else:
@@ -789,10 +791,10 @@ async def add_employeees(call: types.CallbackQuery, state: FSMContext):
             inlineh2.row(
                 types.InlineKeyboardButton("Скрыть", callback_data=f"message_hide")
             )
-            if None in photos: pass
-            else:
-                for p in photos:
+            for p in photos:
+                try:
                     await call.message.answer_photo(photo=p, reply_markup=inlineh2)
+                except: pass
             await call.message.answer(text, reply_markup=inlineh1)
 
     else:
@@ -807,7 +809,7 @@ async def add_employeees(call: types.CallbackQuery, state: FSMContext):
         for product in products:
             text = (
                 f"Товар: {product}\nКоличество: {product.count}\n"
-                f"Оптовая цена: {product.opt_price}\nСумма товара: {product.product_suum}\n"
+                f"Оптовая цена: {product.opt_price}\nНа сумму: {product.product_suum}\n"
                 f"2.5% от Суммы Товара: {product.product_percent}"
             )
             inlineh1 = types.InlineKeyboardMarkup()
@@ -815,17 +817,15 @@ async def add_employeees(call: types.CallbackQuery, state: FSMContext):
                 types.InlineKeyboardButton("Скрыть", callback_data=f"message_hide")
             )
 
-            photos = [ph.photo for ph in product.products.all()]
+            photos = product.photo
             inlineh2 = types.InlineKeyboardMarkup()
             inlineh2.row(
                 types.InlineKeyboardButton("Скрыть", callback_data=f"message_hide")
             )
-            if None in photos: pass
+            if None is photos: pass
             else:
-                for p in photos:
-                    await call.message.answer_photo(photo=p, reply_markup=inlineh2)
+                await call.message.answer_photo(photo=photos, reply_markup=inlineh2)
             await call.message.answer(text, reply_markup=inlineh1)
-
     else:
         await call.message.answer("❌ Ничего не найдено")
 
@@ -849,10 +849,10 @@ async def add_employeees(call: types.CallbackQuery, state: FSMContext):
             inlineh2.row(
                 types.InlineKeyboardButton("Скрыть", callback_data=f"message_hide")
             )
-            if None in photos: pass
-            else:
-                for p in photos:
+            for p in photos:
+                try:
                     await call.message.answer_photo(photo=p, reply_markup=inlineh2)
+                except: pass
             await call.message.answer(text, reply_markup=inlineh1)
 
     else:
@@ -877,10 +877,10 @@ async def add_employeees(call: types.CallbackQuery, state: FSMContext):
             inlineh2.row(
                 types.InlineKeyboardButton("Скрыть", callback_data=f"message_hide")
             )
-            if None in photos: pass
-            else:
-                for p in photos:
+            for p in photos:
+                try:
                     await call.message.answer_photo(photo=p, reply_markup=inlineh2)
+                except: pass
             await call.message.answer(text, reply_markup=inlineh1)
 
     else:
@@ -905,9 +905,10 @@ async def add_employeees(call: types.CallbackQuery, state: FSMContext):
             inlineh2.row(
                 types.InlineKeyboardButton("Скрыть", callback_data=f"message_hide")
             )
-            if photos:
-                for p in photos:
+            for p in photos:
+                try:
                     await call.message.answer_photo(photo=p, reply_markup=inlineh2)
+                except: pass
             await call.message.answer(text, reply_markup=inlineh1)
 
     else:
@@ -932,10 +933,10 @@ async def add_employeees(call: types.CallbackQuery, state: FSMContext):
             inlineh2.row(
                 types.InlineKeyboardButton("Скрыть", callback_data=f"message_hide")
             )
-            if None in photos: pass
-            else:
-                for p in photos:
+            for p in photos:
+                try:
                     await call.message.answer_photo(photo=p, reply_markup=inlineh2)
+                except: pass
             await call.message.answer(text, reply_markup=inlineh1)
 
     else:
@@ -960,10 +961,10 @@ async def add_employeees(call: types.CallbackQuery, state: FSMContext):
             inlineh2.row(
                 types.InlineKeyboardButton("Скрыть", callback_data=f"message_hide")
             )
-            if None in photos: pass
-            else:
-                for p in photos:
+            for p in photos:
+                try:
                     await call.message.answer_photo(photo=p, reply_markup=inlineh2)
+                except: pass
             await call.message.answer(text, reply_markup=inlineh1)
 
     else:
@@ -988,10 +989,10 @@ async def add_employeees(call: types.CallbackQuery, state: FSMContext):
             inlineh2.row(
                 types.InlineKeyboardButton("Скрыть", callback_data=f"message_hide")
             )
-            if None in photos: pass
-            else:
-                for p in photos:
+            for p in photos:
+                try:
                     await call.message.answer_photo(photo=p, reply_markup=inlineh2)
+                except: pass
             await call.message.answer(text, reply_markup=inlineh1)
 
     else:
@@ -1016,10 +1017,10 @@ async def add_employeees(call: types.CallbackQuery, state: FSMContext):
             inlineh2.row(
                 types.InlineKeyboardButton("Скрыть", callback_data=f"message_hide")
             )
-            if None in photos: pass
-            else:
-                for p in photos:
+            for p in photos:
+                try:
                     await call.message.answer_photo(photo=p, reply_markup=inlineh2)
+                except: pass
             await call.message.answer(text, reply_markup=inlineh1)
 
     else:
@@ -1042,17 +1043,16 @@ async def add_employeees(call: types.CallbackQuery, state: FSMContext):
                     types.InlineKeyboardButton("Скрыть", callback_data=f"message_hide")
                 )
 
-                photos = [ph.photo for ph in product.products.all()]
-                inlineh2 = types.InlineKeyboardMarkup()
-                inlineh2.row(
-                    types.InlineKeyboardButton("Скрыть", callback_data=f"message_hide")
-                )
-                if None in photos:
-                    pass
-                else:
-                    for p in photos:
-                        await call.message.answer_photo(photo=p, reply_markup=inlineh2)
-                await call.message.answer(text, reply_markup=inlineh1)
+            photos = [ph.photo for ph in product.products.all()]
+            inlineh2 = types.InlineKeyboardMarkup()
+            inlineh2.row(
+                types.InlineKeyboardButton("Скрыть", callback_data=f"message_hide")
+            )
+            for p in photos:
+                try:
+                    await call.message.answer_photo(photo=p, reply_markup=inlineh2)
+                except: pass
+            await call.message.answer(text, reply_markup=inlineh1)
 
         else:
             await call.message.answer("❌ Ничего не найдено")
@@ -1076,10 +1076,10 @@ async def add_employeees(call: types.CallbackQuery, state: FSMContext):
             inlineh2.row(
                 types.InlineKeyboardButton("Скрыть", callback_data=f"message_hide")
             )
-            if None in photos: pass
-            else:
-                for p in photos:
+            for p in photos:
+                try:
                     await call.message.answer_photo(photo=p, reply_markup=inlineh2)
+                except: pass
             await call.message.answer(text, reply_markup=inlineh1)
 
     else:
@@ -1106,10 +1106,10 @@ async def employees(message: types.Message):
             inlineh2.row(
                 types.InlineKeyboardButton("Скрыть", callback_data=f"message_hide")
             )
-            if None in photos: pass
-            else:
-                for p in photos:
+            for p in photos:
+                try:
                     await message.answer_photo(photo=p, reply_markup=inlineh2)
+                except: pass
             await message.answer(text, reply_markup=inlineh1)
 
     else:
@@ -1165,10 +1165,10 @@ async def employees(message: types.Message):
             inlineh2.row(
                 types.InlineKeyboardButton("Скрыть", callback_data=f"message_hide")
             )
-            if None in photos: pass
-            else:
-                for p in photos:
+            for p in photos:
+                try:
                     await message.answer_photo(photo=p, reply_markup=inlineh2)
+                except: pass
             await message.answer(text, reply_markup=inlineh1)
 
     else:
@@ -1224,10 +1224,10 @@ async def employees(message: types.Message):
             inlineh2.row(
                 types.InlineKeyboardButton("Скрыть", callback_data=f"message_hide")
             )
-            if None in photos: pass
-            else:
-                for p in photos:
+            for p in photos:
+                try:
                     await message.answer_photo(photo=p, reply_markup=inlineh2)
+                except: pass
             await message.answer(text, reply_markup=inlineh1)
 
     else:
@@ -1289,10 +1289,10 @@ async def employees(message: types.Message):
             inlineh2.row(
                 types.InlineKeyboardButton("Скрыть", callback_data=f"message_hide")
             )
-            if None in photos: pass
-            else:
-                for p in photos:
+            for p in photos:
+                try:
                     await message.answer_photo(photo=p, reply_markup=inlineh2)
+                except: pass
             await message.answer(text, reply_markup=inlineh1)
 
     else:
@@ -1370,10 +1370,10 @@ async def employees(message: types.Message):
             inlineh2.row(
                 types.InlineKeyboardButton("Скрыть", callback_data=f"message_hide")
             )
-            if None in photos: pass
-            else:
-                for p in photos:
+            for p in photos:
+                try:
                     await message.answer_photo(photo=p, reply_markup=inlineh2)
+                except: pass
             await message.answer(text, reply_markup=inlineh1)
 
     else:
@@ -1400,23 +1400,24 @@ async def add_employeees(call: types.CallbackQuery, state: FSMContext):
             )
         )
 
+
+
+
+
         photos = [ph.photo for ph in product.products.all()]
         inlineh2 = types.InlineKeyboardMarkup()
         inlineh2.row(
             types.InlineKeyboardButton("Скрыть", callback_data=f"message_hide")
         )
-
-
-        if None in photos: pass
-        else:
-            for p in photos:
+        for p in photos:
+            try:
                 await bot.send_photo(
                     chat_id=user_id,
                     photo=str(p),
                     caption=text,
                     reply_markup=inlineh2,
                 )
-
+            except: pass
         await bot.send_message(chat_id=user_id, text=text, reply_markup=inlineh1)
 
         await call.message.delete()
@@ -1477,9 +1478,10 @@ async def employees(message: types.Message, state: FSMContext):
             inlineh2.row(
                 types.InlineKeyboardButton("Скрыть", callback_data=f"message_hide")
             )
-            if photos:
-                for p in photos:
+            for p in photos:
+                try:
                     await message.answer_photo(photo=p, reply_markup=inlineh2)
+                except: pass
             await message.answer(text, reply_markup=inlineh1)
     except Exception as ex:
         await message.answer(f"❌ Товар не найден ({ex})")
@@ -1516,9 +1518,7 @@ async def employees(message: types.Message, state: FSMContext):
     product_title2 = data[2]
     product_price2 = data[3]
 
-    l.success(
-        f"{product_title} , {product_price} | {product_title2} , {product_price2}"
-    )
+
 
     product_id = _["product_id"]
 
@@ -1558,9 +1558,6 @@ async def employees(message: types.Message, state: FSMContext):
     product_title2 = data[2]
     product_price2 = data[3]
 
-    l.success(
-        f"{product_title} , {product_price} | {product_title2} , {product_price2}"
-    )
 
     product_id = _["product_id"]
 
@@ -1612,11 +1609,10 @@ async def efdsfsdff(message: types.Message, state: FSMContext):
             inlineh2.row(
                 types.InlineKeyboardButton("Скрыть", callback_data=f"message_hide")
             )
-
-            if None in photos: pass
-            else:
-                for p in photos:
+            for p in photos:
+                try:
                     await message.answer_photo(photo=p, reply_markup=inlineh2)
+                except: pass
             
             if product.checks_document is None: pass
             else: await message.answer_photo(photo=open(product.checks_document, "rb"), reply_markup=inlineh2, caption="Чек")
@@ -1696,13 +1692,12 @@ async def fdslfk32fx(message: types.Message, state: FSMContext):
         else: 
             cout_bool = "❌ Нет в наличии ❌"
 
-        text = f"Товар: <b>{products.product}</b>\n \
+        text = f"Наличие: <b>{cout_bool}</b>\n \
+Товар: <b>{products.product}</b>\n \
 Количество: <b>{products.count}</b>\n \
 Цена: <b>{products.opt_price}</b>\n \
-Сумма товара: <b>{products.product_suum}</b>\n \
-2.5% От Суммы Товара: <b>{products.product_percent}</b> \
-Наличие: <b>{cout_bool}</b>"
-        
+На сумму: <b>{products.product_suum}</b>\n \
+2.5% От Суммы Товара: <b>{products.product_percent}</b>"        
 
         inline_kb_full = types.InlineKeyboardMarkup()
         inline_kb_full.row(types.InlineKeyboardButton("Изменить товар", callback_data=f"change_tovar:{products.pk}"))
