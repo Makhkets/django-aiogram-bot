@@ -473,9 +473,12 @@ def find_products(info):
         if len(p) >= 1:
             return p
 
-        p = Applications.objects.filter(phone__contains=info)
-        if len(p) >= 1:
-            return p
+        if len(info) < 5:
+            return None
+        else:
+            p = Applications.objects.filter(phone__contains=info)
+            if len(p) >= 1:
+                return p
 
         return None
     except:
@@ -706,4 +709,56 @@ def сhange_opt(product_id, price):
     p = Products.objects.get(pk=product_id)
     p.opt_price = price
     p.save()
+    return "✅ Успешно"
+
+@sync_to_async
+def change_product_request(product_id, new_products):
+    p = Applications.objects.get(pk=product_id)
+    product = new_products
+    product = product.split(" ")
+    PRODUCTS = []
+    for prd in product:
+        PRODUCTS.append(get_number_product_1(prd))
+    for j in PRODUCTS:
+        try:
+            if "не найден" in j:
+                return j
+        except:
+            pass
+
+    p.product = new_products.split(" ")
+    p.save()
+    return "✅ Успешно изменил товары!"
+
+@sync_to_async
+def change_address(product_id, new_address):
+    p = Applications.objects.get(pk=product_id)
+    p.address = new_address
+    p.save()
+
+    return "✅ Успешно"
+
+@sync_to_async
+def change_note(product_id, new_note):
+    p = Applications.objects.get(pk=product_id)
+    p.note = new_note
+    p.save()
+
+    return "✅ Успешно"
+
+
+@sync_to_async
+def change_price(product_id, new_price):
+    p = Applications.objects.get(pk=product_id)
+    p.price = new_price
+    p.save()
+
+    return "✅ Успешно"
+
+@sync_to_async
+def change_phone(product_id, new_phone):
+    p = Applications.objects.get(pk=product_id)
+    p.phone = new_phone
+    p.save()
+
     return "✅ Успешно"

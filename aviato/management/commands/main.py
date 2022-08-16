@@ -55,6 +55,13 @@ class D(StatesGroup):
     tv3 = State()
     tv4 = State()
 
+    edit_request_1 = State()
+    edit_request_2 = State()
+    edit_request_3 = State()
+    edit_request_4 = State()
+    edit_request_5 = State()
+
+
 async def count_bool(product):
     if product.bool_count:
         return "✅ Есть в наличии"
@@ -77,8 +84,8 @@ async def get_menu(message):
         user_id=str(message.from_user.id), username=message.from_user.username
     )
 
-    text = """
-Добрый день, Benefix! Мы рады приветствовать Вас в чат-боте
+    text = f"""
+Добрый день, {message.from_user.first_name}! Мы рады приветствовать Вас в чат-боте
 <b>«RUKEA»</b>!
 
 Для выбора интересующего вас раздела воспользуйтесь кнопками из меню ниже 👇
@@ -516,15 +523,12 @@ async def employees(message: types.Message):
                     await message.answer_photo(photo=p, reply_markup=inlineh2)
                 except: pass
 
-
             await message.answer(text, reply_markup=inlineh1)
 
     else:
         await message.answer("Пока нет заявок.")
     await cloud()
 
-
-# a.products.first().photo
 
 
 @dp.message_handler(text="📔 Все Заявки", state="*")
@@ -1628,14 +1632,125 @@ async def fdfdsfd13(call: types.CallbackQuery, state: FSMContext):
     await call.message.delete()
     await call.message.answer("✅ Успешно")
 
+
+
+
+
+
+
+
+
+
+
 @dp.callback_query_handler(text_startswith="edit_request", state="*")
 async def fdsf31fkx1(call: types.CallbackQuery, state: FSMContext):
+    await call.message.delete()
+    product_id = call.data.split(":")[1]
+    product = await get_product(product_id=product_id)
+    text = await get_message_from_product(product=product) + "\n\n<b>Выберите что изменить:</b>"
+
+    inline_kb_full = types.InlineKeyboardMarkup()
+    inline_kb_full.row(types.InlineKeyboardButton("Товар", callback_data=f"edit_product1:{product_id}"), 
+                        types.InlineKeyboardButton("Примечание", callback_data=f"edit_note1:{product_id}"))
+    inline_kb_full.row(types.InlineKeyboardButton("Адрес", callback_data=f"edit_address1:{product_id}"), 
+
+                        types.InlineKeyboardButton("Цена", callback_data=f"edit_price1:{product_id}"))
+    inline_kb_full.row(types.InlineKeyboardButton("Номер", callback_data=f"edit_phone1:{product_id}"))
+    await call.message.answer(text, reply_markup=inline_kb_full)
+
+######################################################################################################
+
+@dp.callback_query_handler(text_startswith="edit_phone1")
+async def handler(call: types.CallbackQuery, state: FSMContext):
     product_id = call.data.split(":")[1]
     await state.update_data(product_id=product_id)
-    await call.message.answer(
-        "🖋 Заполните и отправьте следующий шаблон\n\nТовар\nАдрес\nНомер (только цифры)\nЦена (число)\nПримечание\n\nЧтобы отменить изменение заявки напишите /start"
-    )
-    await D.edit_product.set()
+    await call.message.answer("Введите новый номер телефона: ")
+    await D.edit_request_5.set()
+
+@dp.message_handler(state=D.edit_request_5)
+async def handler(message: types.Message, state: FSMContext):
+    data = await state.get_data()
+    new_phone = message.text
+    product_id = data["product_id"]
+    text = await change_phone(product_id, new_phone)
+    await message.answer(text)
+    await get_menu(message=message)
+    await state.finish()
+
+######################################################################################################
+
+@dp.callback_query_handler(text_startswith="edit_price1")
+async def handler(call: types.CallbackQuery, state: FSMContext):
+    product_id = call.data.split(":")[1]
+    await state.update_data(product_id=product_id)
+    await call.message.answer("Введите новую цену <b>в цифрах</b>") 
+    await D.edit_request_4.set()
+
+@dp.message_handler(state=D.edit_request_4)
+async def handler(message: types.Message, state: FSMContext):
+    data = await state.get_data()
+    new_price = message.text
+    product_id = data["product_id"]
+    text = await change_price(product_id, new_price)
+    await message.answer(text)
+    await get_menu(message)
+    await state.finish()
+
+
+@dp.callback_query_handler(text_startswith="edit_note1")
+async def handler(call: types.CallbackQuery, state: FSMContext):
+    product_id = call.data.split(":")[1]
+    await state.update_data(product_id=product_id)
+    await call.message.answer("Введите новое примечание")
+    await D.edit_request_3.set()
+
+@dp.message_handler(state=D.edit_request_3)
+async def handler(message: types.Message, state: FSMContext):
+    data = await state.get_data()
+    new_note = message.text
+    product_id = data["product_id"]
+    text = await change_note(product_id, new_note)
+    await message.answer(text)
+    await get_menu(message)
+    await state.finish()
+
+@dp.callback_query_handler(text_startswith="edit_address1")
+async def fdskfj3(call: types.CallbackQuery, state: FSMContext): 
+    product_id = call.data.split(":")[1]
+    await state.update_data(product_id=product_id)
+    await call.message.answer("Введите новый адрес: ")
+    await D.edit_request_2.set()
+
+@dp.message_handler(state=D.edit_request_2)
+async def fdf3as(message: types.Message, state: FSMContext):
+    data = await state.get_data()
+    new_address = message.text
+    product_id = data["product_id"]
+    text = await change_address(product_id, new_address)
+    await message.answer(text)
+    await get_menu(message)
+    await state.finish()
+
+@dp.callback_query_handler(text_startswith="edit_product1", state="*")
+async def fdfdsfd13(call: types.CallbackQuery, state: FSMContext):
+    prodcut_id = call.data.split(":")[1]
+    await state.update_data(product_id=prodcut_id)
+    await call.message.answer("Введите новые товары: ")
+    await D.edit_request_1.set()
+
+@dp.message_handler(state=D.edit_request_1)
+async def fldsk3(message: types.Message, state: FSMContext):
+    data = await state.get_data()
+    new_products = message.text
+    product_id = data["product_id"]
+    text = await change_product_request(product_id, new_products)
+    await message.answer(text)
+    await get_menu(message)
+    await state.finish()
+
+
+
+
 
 
 @dp.message_handler(state=D.edit_product)
