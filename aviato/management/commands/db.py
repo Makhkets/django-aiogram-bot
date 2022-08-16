@@ -116,18 +116,20 @@ def get_number_product_1(string):
             if i[-j].isdigit():
                 number += str(i[-j])
             if i[-j].isalpha():
+
                 replace_text = f"{number[::-1]}шт"
                 orig_product = string.replace(replace_text, "").lower()
-                pr = Products.objects.get(product__contains=orig_product)
+                pr = Products.objects.get(product=orig_product)
                 pr.count -= int(number[::-1])
                 pr.save()
                 return pr
 
         replace_text = f"{number[::-1]}шт"
         orig_product = string.replace(replace_text, "").lower()
-        pr = Products.objects.get(product__contains=orig_product)
+        pr = Products.objects.get(product=orig_product)
         pr.count -= int(number[::-1])
         pr.save()
+
         return pr
     except Exception as ex:
         return f"Такой товар не найден ({string}) ({str(ex)})"
@@ -140,7 +142,6 @@ def product_save(user_id, data):
     product = data[0]
 
     product = product.split(" ")
-
     PRODUCTS = []
     for prd in product:
         PRODUCTS.append(get_number_product_1(prd))
