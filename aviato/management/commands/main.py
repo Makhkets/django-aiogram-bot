@@ -67,17 +67,21 @@ async def count_bool(product):
         return "✅ Есть в наличии"
     return "❌ Нет в наличии ❌"
 
+
 async def get_message_from_product(product):
     cout_bool = await count_bool(product=product)
-    text = f"{cout_bool}\n" \
-           f"Примечание: {product.note}\nАдресс: {product.address}\n" \
-           f"Товар: {str(product.product).replace('[', '').replace(']', '')}\n" \
-           f"Цена: {product.price}\nНомер: {product.phone}\n" \
-           f"Владелец товара: @{product.user.username} ({product.user.role})\n\n" \
-           f"ID: {product.pk}\nЛокация водителя: {str(product.location).replace('None', 'Неизвестно')}\n" \
-           f"Изменение локации было в: {str(product.time_update_location).split('.')[0]}\n"
+    text = (
+        f"{cout_bool}\n"
+        f"Примечание: {product.note}\nАдресс: {product.address}\n"
+        f"Товар: {str(product.product).replace('[', '').replace(']', '')}\n"
+        f"Цена: {product.price}\nНомер: {product.phone}\n"
+        f"Владелец товара: @{product.user.username} ({product.user.role})\n\n"
+        f"ID: {product.pk}\nЛокация водителя: {str(product.location).replace('None', 'Неизвестно')}\n"
+        f"Изменение локации было в: {str(product.time_update_location).split('.')[0]}\n"
+    )
 
     return text.replace("'", "")
+
 
 async def get_menu(message):
     user = await get_user_or_create(
@@ -201,7 +205,6 @@ async def cloud():
                             packer.user_id, "❗ У вас есть необработанныее заказы"
                         )
 
-
         a = Applications.objects.all()
         for application in a:
             prod = application.products.all()
@@ -213,9 +216,6 @@ async def cloud():
                     application.bool_count = False
                     application.save()
                     continue
-
-
-
 
     except Exception as ex:
         l.error(ex)
@@ -251,13 +251,14 @@ async def add_employeees(call: types.CallbackQuery, state: FSMContext):
 @dp.callback_query_handler(text_startswith="supplier_code", state="*")
 async def dsa1rfxsf3(call: types.CallbackQuery, state: FSMContext):
     code = randint(100, 999)
-    await create_code_employees(user_id=call.message.chat.id, code=code, role="Снабженец")
+    await create_code_employees(
+        user_id=call.message.chat.id, code=code, role="Снабженец"
+    )
     await get_menu_call(call)
     await call.message.answer(
         f"Код чтобы получить статус <b>Снабженец</b> в боте\n\nКод: <code>{code}</code>"
     )
     await cloud()
-
 
 
 @dp.callback_query_handler(text_startswith="admin_code", state="*")
@@ -480,8 +481,11 @@ async def userrequests(message: types.Message, state: FSMContext):
     try:
         operators = await get_operators()
         for operator in operators:
-            await bot.send_message(operator.user_id, "⌛ У вас есть необработанный заказ")
-    except: pass
+            await bot.send_message(
+                operator.user_id, "⌛ У вас есть необработанный заказ"
+            )
+    except:
+        pass
     await state.finish()
     await message.answer(text)
     await cloud()
@@ -521,14 +525,23 @@ async def employees(message: types.Message):
             for p in photos:
                 try:
                     await message.answer_photo(photo=p, reply_markup=inlineh2)
-                except: pass
+                except:
+                    pass
+            if product.checks_document is None:
+                pass
+            else:
+                await message.answer_photo(
+                    photo=open(product.checks_document, "rb"),
+                    reply_markup=inlineh2,
+                    caption="Чек",
+                )
+
 
             await message.answer(text, reply_markup=inlineh1)
 
     else:
         await message.answer("Пока нет заявок.")
     await cloud()
-
 
 
 @dp.message_handler(text="📔 Все Заявки", state="*")
@@ -552,7 +565,16 @@ async def employees(message: types.Message):
             for p in photos:
                 try:
                     await message.answer_photo(photo=p, reply_markup=inlineh2)
-                except: pass
+                except:
+                    pass
+            if product.checks_document is None:
+                pass
+            else:
+                await message.answer_photo(
+                    photo=open(product.checks_document, "rb"),
+                    reply_markup=inlineh2,
+                    caption="Чек",
+                )
             await message.answer(text, reply_markup=inlineh1)
 
     else:
@@ -601,13 +623,20 @@ async def employees(message: types.Message, state: FSMContext):
 
     photos = [ph.photo for ph in product.products.all()]
     inlineh2 = types.InlineKeyboardMarkup()
-    inlineh2.row(
-        types.InlineKeyboardButton("Скрыть", callback_data=f"message_hide")
-    )
+    inlineh2.row(types.InlineKeyboardButton("Скрыть", callback_data=f"message_hide"))
     for p in photos:
         try:
             await message.answer_photo(photo=p, reply_markup=inlineh2)
-        except: pass
+        except:
+            pass
+    if product.checks_document is None:
+        pass
+    else:
+        await message.answer_photo(
+            photo=open(product.checks_document, "rb"),
+            reply_markup=inlineh2,
+            caption="Чек",
+        )
     await message.answer(text, reply_markup=inlineh1)
 
 
@@ -622,7 +651,8 @@ async def add_employeees(call: types.CallbackQuery, state: FSMContext):
         logists = await get_logists()
         for logist in logists:
             await bot.send_message(logist.user_id, "⌛ У вас есть необработанный заказ")
-    except: pass
+    except:
+        pass
     await get_menu_call(call)
     await call.message.delete()
     await call.message.answer(text)
@@ -661,7 +691,16 @@ async def dfs13fdsv(message: types.Message, state: FSMContext):
             for p in photos:
                 try:
                     await message.answer_photo(photo=p, reply_markup=inlineh2)
-                except: pass
+                except:
+                    pass
+            if product.checks_document is None:
+                pass
+            else:
+                await message.answer_photo(
+                    photo=open(product.checks_document, "rb"),
+                    reply_markup=inlineh2,
+                    caption="Чек",
+                )
             await message.answer(text, reply_markup=inlineh1)
 
     else:
@@ -716,7 +755,8 @@ async def employees(message: types.Message):
     inlineh1.row(
         types.InlineKeyboardButton(
             "❗ Нет в наличии ❗", callback_data="oj_net_v_nalichii"
-    ))
+        )
+    )
     inlineh1.row(
         types.InlineKeyboardButton("❌ Дорожный брак", callback_data="oj_dorozh_brak"),
         types.InlineKeyboardButton("❌ Фабричный брак", callback_data="oj_fabr_brak"),
@@ -734,6 +774,7 @@ async def employees(message: types.Message):
 
     await message.answer(answer, reply_markup=inlineh1)
     await cloud()
+
 
 @dp.message_handler(text="❗ Нет в наличии ❗", state="*")
 async def dfsfdslf(message: types.Message, state: FSMContext):
@@ -762,12 +803,20 @@ async def dfsfdslf(message: types.Message, state: FSMContext):
             for p in photos:
                 try:
                     await message.answer_photo(photo=p, reply_markup=inlineh2)
-                except: pass
+                except:
+                    pass
+            if product.checks_document is None:
+                pass
+            else:
+                await message.answer_photo(
+                    photo=open(product.checks_document, "rb"),
+                    reply_markup=inlineh2,
+                    caption="Чек",
+                )
             await message.answer(text, reply_markup=inlineh1)
 
     else:
         await message.answer("❌ Ничего не найдено")
-
 
 
 # Нет в наличии
@@ -798,11 +847,22 @@ async def add_employeees(call: types.CallbackQuery, state: FSMContext):
             for p in photos:
                 try:
                     await call.message.answer_photo(photo=p, reply_markup=inlineh2)
-                except: pass
+                except:
+                    pass
+
+            if product.checks_document is None:
+                pass
+            else:
+                await call.message.answer_photo(
+                    photo=open(product.checks_document, "rb"),
+                    reply_markup=inlineh2,
+                    caption="Чек",
+                )
             await call.message.answer(text, reply_markup=inlineh1)
 
     else:
         await call.message.answer("❌ Ничего не найдено")
+
 
 # Ожидающие товары oj_pr
 @dp.callback_query_handler(text_startswith="oj_pr", state="*")
@@ -826,7 +886,8 @@ async def add_employeees(call: types.CallbackQuery, state: FSMContext):
             inlineh2.row(
                 types.InlineKeyboardButton("Скрыть", callback_data=f"message_hide")
             )
-            if None is photos: pass
+            if None is photos:
+                pass
             else:
                 await call.message.answer_photo(photo=photos, reply_markup=inlineh2)
             await call.message.answer(text, reply_markup=inlineh1)
@@ -856,7 +917,16 @@ async def add_employeees(call: types.CallbackQuery, state: FSMContext):
             for p in photos:
                 try:
                     await call.message.answer_photo(photo=p, reply_markup=inlineh2)
-                except: pass
+                except:
+                    pass
+            if product.checks_document is None:
+                pass
+            else:
+                await call.message.answer_photo(
+                    photo=open(product.checks_document, "rb"),
+                    reply_markup=inlineh2,
+                    caption="Чек",
+                )
             await call.message.answer(text, reply_markup=inlineh1)
 
     else:
@@ -884,7 +954,16 @@ async def add_employeees(call: types.CallbackQuery, state: FSMContext):
             for p in photos:
                 try:
                     await call.message.answer_photo(photo=p, reply_markup=inlineh2)
-                except: pass
+                except:
+                    pass
+            if product.checks_document is None:
+                pass
+            else:
+                await call.message.answer_photo(
+                    photo=open(product.checks_document, "rb"),
+                    reply_markup=inlineh2,
+                    caption="Чек",
+                )
             await call.message.answer(text, reply_markup=inlineh1)
 
     else:
@@ -912,7 +991,16 @@ async def add_employeees(call: types.CallbackQuery, state: FSMContext):
             for p in photos:
                 try:
                     await call.message.answer_photo(photo=p, reply_markup=inlineh2)
-                except: pass
+                except:
+                    pass
+            if product.checks_document is None:
+                pass
+            else:
+                await call.message.answer_photo(
+                    photo=open(product.checks_document, "rb"),
+                    reply_markup=inlineh2,
+                    caption="Чек",
+                )
             await call.message.answer(text, reply_markup=inlineh1)
 
     else:
@@ -940,7 +1028,16 @@ async def add_employeees(call: types.CallbackQuery, state: FSMContext):
             for p in photos:
                 try:
                     await call.message.answer_photo(photo=p, reply_markup=inlineh2)
-                except: pass
+                except:
+                    pass
+            if product.checks_document is None:
+                pass
+            else:
+                await call.message.answer_photo(
+                    photo=open(product.checks_document, "rb"),
+                    reply_markup=inlineh2,
+                    caption="Чек",
+                )
             await call.message.answer(text, reply_markup=inlineh1)
 
     else:
@@ -968,7 +1065,16 @@ async def add_employeees(call: types.CallbackQuery, state: FSMContext):
             for p in photos:
                 try:
                     await call.message.answer_photo(photo=p, reply_markup=inlineh2)
-                except: pass
+                except:
+                    pass
+            if product.checks_document is None:
+                pass
+            else:
+                await call.message.answer_photo(
+                    photo=open(product.checks_document, "rb"),
+                    reply_markup=inlineh2,
+                    caption="Чек",
+                )
             await call.message.answer(text, reply_markup=inlineh1)
 
     else:
@@ -996,7 +1102,16 @@ async def add_employeees(call: types.CallbackQuery, state: FSMContext):
             for p in photos:
                 try:
                     await call.message.answer_photo(photo=p, reply_markup=inlineh2)
-                except: pass
+                except:
+                    pass
+            if product.checks_document is None:
+                pass
+            else:
+                await call.message.answer_photo(
+                    photo=open(product.checks_document, "rb"),
+                    reply_markup=inlineh2,
+                    caption="Чек",
+                )
             await call.message.answer(text, reply_markup=inlineh1)
 
     else:
@@ -1024,7 +1139,16 @@ async def add_employeees(call: types.CallbackQuery, state: FSMContext):
             for p in photos:
                 try:
                     await call.message.answer_photo(photo=p, reply_markup=inlineh2)
-                except: pass
+                except:
+                    pass
+            if product.checks_document is None:
+                pass
+            else:
+                await call.message.answer_photo(
+                    photo=open(product.checks_document, "rb"),
+                    reply_markup=inlineh2,
+                    caption="Чек",
+                )
             await call.message.answer(text, reply_markup=inlineh1)
 
     else:
@@ -1055,7 +1179,16 @@ async def add_employeees(call: types.CallbackQuery, state: FSMContext):
             for p in photos:
                 try:
                     await call.message.answer_photo(photo=p, reply_markup=inlineh2)
-                except: pass
+                except:
+                    pass
+            if product.checks_document is None:
+                pass
+            else:
+                await call.message.answer_photo(
+                    photo=open(product.checks_document, "rb"),
+                    reply_markup=inlineh2,
+                    caption="Чек",
+                )
             await call.message.answer(text, reply_markup=inlineh1)
 
         else:
@@ -1083,7 +1216,16 @@ async def add_employeees(call: types.CallbackQuery, state: FSMContext):
             for p in photos:
                 try:
                     await call.message.answer_photo(photo=p, reply_markup=inlineh2)
-                except: pass
+                except:
+                    pass
+            if product.checks_document is None:
+                pass
+            else:
+                await call.message.answer_photo(
+                    photo=open(product.checks_document, "rb"),
+                    reply_markup=inlineh2,
+                    caption="Чек",
+                )
             await call.message.answer(text, reply_markup=inlineh1)
 
     else:
@@ -1113,7 +1255,16 @@ async def employees(message: types.Message):
             for p in photos:
                 try:
                     await message.answer_photo(photo=p, reply_markup=inlineh2)
-                except: pass
+                except:
+                    pass
+            if product.checks_document is None:
+                pass
+            else:
+                await message.answer_photo(
+                    photo=open(product.checks_document, "rb"),
+                    reply_markup=inlineh2,
+                    caption="Чек",
+                )
             await message.answer(text, reply_markup=inlineh1)
 
     else:
@@ -1138,12 +1289,13 @@ async def add_employe(message: types.Message, state: FSMContext):
         packers = await get_all_packers()
         for packer in packers:
             await bot.send_message(packer.user_id, "⌛ У вас есть неупакованный заказ")
-    except Exception as ex: l.critical(ex)
-    
+    except Exception as ex:
+        l.critical(ex)
+
     data = await state.get_data()
     dist = message.text
     text = await product_pack(product_id=data["product_id"], dist=dist)
-    
+
     await get_menu(message)
     await message.answer(text)
     await state.finish()
@@ -1172,7 +1324,16 @@ async def employees(message: types.Message):
             for p in photos:
                 try:
                     await message.answer_photo(photo=p, reply_markup=inlineh2)
-                except: pass
+                except:
+                    pass
+            if product.checks_document is None:
+                pass
+            else:
+                await message.answer_photo(
+                    photo=open(product.checks_document, "rb"),
+                    reply_markup=inlineh2,
+                    caption="Чек",
+                )
             await message.answer(text, reply_markup=inlineh1)
 
     else:
@@ -1188,9 +1349,11 @@ async def add_employeees(call: types.CallbackQuery, state: FSMContext):
         logists = await get_logists()
         for logist in logists:
             await bot.send_message(
-                logist.user_id, "❗ У вас есть необработанныее заказы <b>для водителей</b>"
+                logist.user_id,
+                "❗ У вас есть необработанныее заказы <b>для водителей</b>",
             )
-    except: pass
+    except:
+        pass
     await get_menu_call(call)
     await call.message.answer(text)
     await cloud()
@@ -1231,7 +1394,16 @@ async def employees(message: types.Message):
             for p in photos:
                 try:
                     await message.answer_photo(photo=p, reply_markup=inlineh2)
-                except: pass
+                except:
+                    pass
+            if product.checks_document is None:
+                pass
+            else:
+                await message.answer_photo(
+                    photo=open(product.checks_document, "rb"),
+                    reply_markup=inlineh2,
+                    caption="Чек",
+                )
             await message.answer(text, reply_markup=inlineh1)
 
     else:
@@ -1262,7 +1434,8 @@ async def employees(message: types.Message):
         admin_list = await admins_list()
         for admin in admin_list:
             await bot.send_message(admin.user_id, "✅ Водитель обновил свою геолокацию")
-    except: pass
+    except:
+        pass
 
     city = location.raw["address"]["city"]
     region = location.raw["address"]["state"]
@@ -1296,7 +1469,16 @@ async def employees(message: types.Message):
             for p in photos:
                 try:
                     await message.answer_photo(photo=p, reply_markup=inlineh2)
-                except: pass
+                except:
+                    pass
+            if product.checks_document is None:
+                pass
+            else:
+                await message.answer_photo(
+                    photo=open(product.checks_document, "rb"),
+                    reply_markup=inlineh2,
+                    caption="Чек",
+                )
             await message.answer(text, reply_markup=inlineh1)
 
     else:
@@ -1377,7 +1559,16 @@ async def employees(message: types.Message):
             for p in photos:
                 try:
                     await message.answer_photo(photo=p, reply_markup=inlineh2)
-                except: pass
+                except:
+                    pass
+            if product.checks_document is None:
+                pass
+            else:
+                await message.answer_photo(
+                    photo=open(product.checks_document, "rb"),
+                    reply_markup=inlineh2,
+                    caption="Чек",
+                )
             await message.answer(text, reply_markup=inlineh1)
 
     else:
@@ -1404,10 +1595,6 @@ async def add_employeees(call: types.CallbackQuery, state: FSMContext):
             )
         )
 
-
-
-
-
         photos = [ph.photo for ph in product.products.all()]
         inlineh2 = types.InlineKeyboardMarkup()
         inlineh2.row(
@@ -1421,7 +1608,8 @@ async def add_employeees(call: types.CallbackQuery, state: FSMContext):
                     caption=text,
                     reply_markup=inlineh2,
                 )
-            except: pass
+            except:
+                pass
         await bot.send_message(chat_id=user_id, text=text, reply_markup=inlineh1)
 
         await call.message.delete()
@@ -1485,7 +1673,16 @@ async def employees(message: types.Message, state: FSMContext):
             for p in photos:
                 try:
                     await message.answer_photo(photo=p, reply_markup=inlineh2)
-                except: pass
+                except:
+                    pass
+            if product.checks_document is None:
+                pass
+            else:
+                await message.answer_photo(
+                    photo=open(product.checks_document, "rb"),
+                    reply_markup=inlineh2,
+                    caption="Чек",
+                )
             await message.answer(text, reply_markup=inlineh1)
     except Exception as ex:
         await message.answer(f"❌ Товар не найден ({ex})")
@@ -1521,8 +1718,6 @@ async def employees(message: types.Message, state: FSMContext):
 
     product_title2 = data[2]
     product_price2 = data[3]
-
-
 
     product_id = _["product_id"]
 
@@ -1561,7 +1756,6 @@ async def employees(message: types.Message, state: FSMContext):
 
     product_title2 = data[2]
     product_price2 = data[3]
-
 
     product_id = _["product_id"]
 
@@ -1616,10 +1810,17 @@ async def efdsfsdff(message: types.Message, state: FSMContext):
             for p in photos:
                 try:
                     await message.answer_photo(photo=p, reply_markup=inlineh2)
-                except: pass
-            
-            if product.checks_document is None: pass
-            else: await message.answer_photo(photo=open(product.checks_document, "rb"), reply_markup=inlineh2, caption="Чек")
+                except:
+                    pass
+
+            if product.checks_document is None:
+                pass
+            else:
+                await message.answer_photo(
+                    photo=open(product.checks_document, "rb"),
+                    reply_markup=inlineh2,
+                    caption="Чек",
+                )
 
             cout_bool = await count_bool(product=product)
             text = f"Информация о доставке: {str(product.delivery_information).replace('None', 'Отсутствует')}\nАдресс: <b>{product.address}</b>\nТовар: <b>{product.product}</b>\nЦена: <b>{product.price}</b>\nНомер: <b>{product.phone}</b>\nВладелец товара: <b>@{product.user.username} ({product.user.role})</b>\nПримечание: <b>{product.note}</b>\n\nID: <b>{product.pk}</b>\nСтатуc: <b>{product.status}</b>\nЛокация водителя: <b>{str(product.location).replace('None', 'Неизвестно')}</b>\nИзменение локации было в: <b>{str(product.time_update_location).split('.')[0]}</b>\n{cout_bool}"
@@ -1633,32 +1834,37 @@ async def fdfdsfd13(call: types.CallbackQuery, state: FSMContext):
     await call.message.answer("✅ Успешно")
 
 
-
-
-
-
-
-
-
-
-
 @dp.callback_query_handler(text_startswith="edit_request", state="*")
 async def fdsf31fkx1(call: types.CallbackQuery, state: FSMContext):
     await call.message.delete()
     product_id = call.data.split(":")[1]
     product = await get_product(product_id=product_id)
-    text = await get_message_from_product(product=product) + "\n\n<b>Выберите что изменить:</b>"
+    text = (
+        await get_message_from_product(product=product)
+        + "\n\n<b>Выберите что изменить:</b>"
+    )
 
     inline_kb_full = types.InlineKeyboardMarkup()
-    inline_kb_full.row(types.InlineKeyboardButton("Товар", callback_data=f"edit_product1:{product_id}"), 
-                        types.InlineKeyboardButton("Примечание", callback_data=f"edit_note1:{product_id}"))
-    inline_kb_full.row(types.InlineKeyboardButton("Адрес", callback_data=f"edit_address1:{product_id}"), 
-
-                        types.InlineKeyboardButton("Цена", callback_data=f"edit_price1:{product_id}"))
-    inline_kb_full.row(types.InlineKeyboardButton("Номер", callback_data=f"edit_phone1:{product_id}"))
+    inline_kb_full.row(
+        types.InlineKeyboardButton(
+            "Товар", callback_data=f"edit_product1:{product_id}"
+        ),
+        types.InlineKeyboardButton(
+            "Примечание", callback_data=f"edit_note1:{product_id}"
+        ),
+    )
+    inline_kb_full.row(
+        types.InlineKeyboardButton(
+            "Адрес", callback_data=f"edit_address1:{product_id}"
+        ),
+        types.InlineKeyboardButton("Цена", callback_data=f"edit_price1:{product_id}"),
+    )
+    inline_kb_full.row(
+        types.InlineKeyboardButton("Номер", callback_data=f"edit_phone1:{product_id}")
+    )
     await call.message.answer(text, reply_markup=inline_kb_full)
 
-######################################################################################################
+
 
 @dp.callback_query_handler(text_startswith="edit_phone1")
 async def handler(call: types.CallbackQuery, state: FSMContext):
@@ -1666,6 +1872,7 @@ async def handler(call: types.CallbackQuery, state: FSMContext):
     await state.update_data(product_id=product_id)
     await call.message.answer("Введите новый номер телефона: ")
     await D.edit_request_5.set()
+
 
 @dp.message_handler(state=D.edit_request_5)
 async def handler(message: types.Message, state: FSMContext):
@@ -1677,14 +1884,17 @@ async def handler(message: types.Message, state: FSMContext):
     await get_menu(message=message)
     await state.finish()
 
+
 ######################################################################################################
+
 
 @dp.callback_query_handler(text_startswith="edit_price1")
 async def handler(call: types.CallbackQuery, state: FSMContext):
     product_id = call.data.split(":")[1]
     await state.update_data(product_id=product_id)
-    await call.message.answer("Введите новую цену <b>в цифрах</b>") 
+    await call.message.answer("Введите новую цену <b>в цифрах</b>")
     await D.edit_request_4.set()
+
 
 @dp.message_handler(state=D.edit_request_4)
 async def handler(message: types.Message, state: FSMContext):
@@ -1704,6 +1914,7 @@ async def handler(call: types.CallbackQuery, state: FSMContext):
     await call.message.answer("Введите новое примечание")
     await D.edit_request_3.set()
 
+
 @dp.message_handler(state=D.edit_request_3)
 async def handler(message: types.Message, state: FSMContext):
     data = await state.get_data()
@@ -1714,12 +1925,14 @@ async def handler(message: types.Message, state: FSMContext):
     await get_menu(message)
     await state.finish()
 
+
 @dp.callback_query_handler(text_startswith="edit_address1")
-async def fdskfj3(call: types.CallbackQuery, state: FSMContext): 
+async def fdskfj3(call: types.CallbackQuery, state: FSMContext):
     product_id = call.data.split(":")[1]
     await state.update_data(product_id=product_id)
     await call.message.answer("Введите новый адрес: ")
     await D.edit_request_2.set()
+
 
 @dp.message_handler(state=D.edit_request_2)
 async def fdf3as(message: types.Message, state: FSMContext):
@@ -1731,12 +1944,14 @@ async def fdf3as(message: types.Message, state: FSMContext):
     await get_menu(message)
     await state.finish()
 
+
 @dp.callback_query_handler(text_startswith="edit_product1", state="*")
 async def fdfdsfd13(call: types.CallbackQuery, state: FSMContext):
     prodcut_id = call.data.split(":")[1]
     await state.update_data(product_id=prodcut_id)
     await call.message.answer("Введите новые товары: ")
     await D.edit_request_1.set()
+
 
 @dp.message_handler(state=D.edit_request_1)
 async def fldsk3(message: types.Message, state: FSMContext):
@@ -1747,10 +1962,6 @@ async def fldsk3(message: types.Message, state: FSMContext):
     await message.answer(text)
     await get_menu(message)
     await state.finish()
-
-
-
-
 
 
 @dp.message_handler(state=D.edit_product)
@@ -1777,9 +1988,12 @@ async def start(message: types.Message, state: FSMContext):
 
 @dp.message_handler(text="🎫 Добавить товар", state="*")
 async def fdsflj3jf(message: types.Message, state: FSMContext):
-    await message.answer("Заполните шаблон и отправьте следующий шаблон боту\n\nТовар\nКоличество (цифрами)\nЦена (цифрами)\nФото (если нет, оставить прочерк - )\n\nЧтобы отменить загрузку товара пропишите /start")
+    await message.answer(
+        "Заполните шаблон и отправьте следующий шаблон боту\n\nТовар\nКоличество (цифрами)\nЦена (цифрами)\nФото (если нет, оставить прочерк - )\n\nЧтобы отменить загрузку товара пропишите /start"
+    )
     await cloud()
     await D.dob_tovar.set()
+
 
 @dp.message_handler(state=D.dob_tovar)
 async def fdsfq3xf(message: types.Message, state: FSMContext):
@@ -1795,6 +2009,7 @@ async def fsfdsjfk23(message: types.Message, state: FSMContext):
     await message.answer("Введит <b>Артикул</b> или <b>Айди</b>")
     await D.change_tovar.set()
 
+
 @dp.message_handler(state=D.change_tovar)
 async def fdslfk32fx(message: types.Message, state: FSMContext):
     nomer_or_pk = message.text
@@ -1804,7 +2019,7 @@ async def fdslfk32fx(message: types.Message, state: FSMContext):
         cout_bool = ""
         if products.availability:
             cout_bool = "✅ Есть в наличии"
-        else: 
+        else:
             cout_bool = "❌ Нет в наличии ❌"
 
         text = f"Наличие: <b>{cout_bool}</b>\n \
@@ -1812,16 +2027,30 @@ async def fdslfk32fx(message: types.Message, state: FSMContext):
 Количество: <b>{products.count}</b>\n \
 Цена: <b>{products.opt_price}</b>\n \
 На сумму: <b>{products.product_suum}</b>\n \
-2.5% От Суммы Товара: <b>{products.product_percent}</b>"        
+2.5% От Суммы Товара: <b>{products.product_percent}</b>"
 
         inline_kb_full = types.InlineKeyboardMarkup()
-        inline_kb_full.row(types.InlineKeyboardButton("Изменить товар", callback_data=f"change_tovar:{products.pk}"))
-        inline_kb_full.row(types.InlineKeyboardButton("Добавить количество", callback_data=f"add_tovar:{products.pk}"))
-        inline_kb_full.row(types.InlineKeyboardButton("Изменить оптовую цену", callback_data=f"change_price_opt:{products.pk}"))
+        inline_kb_full.row(
+            types.InlineKeyboardButton(
+                "Изменить товар", callback_data=f"change_tovar:{products.pk}"
+            )
+        )
+        inline_kb_full.row(
+            types.InlineKeyboardButton(
+                "Добавить количество", callback_data=f"add_tovar:{products.pk}"
+            )
+        )
+        inline_kb_full.row(
+            types.InlineKeyboardButton(
+                "Изменить оптовую цену", callback_data=f"change_price_opt:{products.pk}"
+            )
+        )
         await message.answer(text, reply_markup=inline_kb_full)
 
-    else: await message.answer("Товар не найден")
+    else:
+        await message.answer("Товар не найден")
     await state.finish()
+
 
 @dp.callback_query_handler(text_startswith="change_tovar", state="*")
 async def fdsf31fkx1(call: types.CallbackQuery, state: FSMContext):
@@ -1836,16 +2065,22 @@ async def fsfdsjfk23(message: types.Message, state: FSMContext):
     data = await state.get_data()
     product_product = message.text
     product_id = data["product_id"]
-    text = await change_product_tv(product_id=product_id, product_product=product_product)
+    text = await change_product_tv(
+        product_id=product_id, product_product=product_product
+    )
     await message.answer(text)
     await state.finish()
+
 
 @dp.callback_query_handler(text_startswith="add_tovar", state="*")
 async def fdsf31fkx1(call: types.CallbackQuery, state: FSMContext):
     await D.tv2.set()
     product_id = call.data.split(":")[1]
     await state.update_data(product_id=product_id)
-    await call.message.answer("✒  Введите число на котороее надо прибавить количество товара: ")
+    await call.message.answer(
+        "✒  Введите число на котороее надо прибавить количество товара: "
+    )
+
 
 @dp.message_handler(state=D.tv2)
 async def fsfdsjfk23(message: types.Message, state: FSMContext):

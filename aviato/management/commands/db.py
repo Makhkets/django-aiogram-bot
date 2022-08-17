@@ -106,31 +106,35 @@ def product_edit(data, product_id):
 #     return Products.objects.filter(product__contains=product, count__gte=1)
 
 
+def get_product_count(string):
+    pass
+
 def get_number_product_1(string):
     try:
         number = ""
-        string = string.lower()
-        i = string.split("шт")[0]
-        print(i)
-        for j in range(1, len(i)):
-            if i[-j].isdigit():
-                number += str(i[-j])
-            if i[-j].isalpha():
+        if len(string) == 0: return "❌ Уберите лишний пробел в строке <b>'Товар'</b> "
+        else:
+            string = string.lower()
+            i = string.split("шт")[0]
+            for j in range(1, len(i)):
+                if i[-j].isdigit():
+                    number += str(i[-j])
+                if i[-j].isalpha():
 
-                replace_text = f"{number[::-1]}шт"
-                orig_product = string.replace(replace_text, "").lower()
-                pr = Products.objects.get(product=orig_product)
-                pr.count -= int(number[::-1])
-                pr.save()
-                return pr
+                    replace_text = f"{number[::-1]}шт"
+                    orig_product = string.replace(replace_text, "").lower()
+                    pr = Products.objects.get(product=orig_product)
+                    pr.count -= int(number[::-1])
+                    pr.save()
+                    return pr
 
-        replace_text = f"{number[::-1]}шт"
-        orig_product = string.replace(replace_text, "").lower()
-        pr = Products.objects.get(product=orig_product)
-        pr.count -= int(number[::-1])
-        pr.save()
+            replace_text = f"{number[::-1]}шт"
+            orig_product = string.replace(replace_text, "").lower()
+            pr = Products.objects.get(product=orig_product)
+            pr.count -= int(number[::-1])
+            pr.save()
 
-        return pr
+            return pr
     except Exception as ex:
         return f"Такой товар не найден ({string}) ({str(ex)})"
 
@@ -149,6 +153,8 @@ def product_save(user_id, data):
         try:
             if "не найден" in j:
                 return j
+            elif "❌" in j:
+                return j
         except:
             pass
 
@@ -166,8 +172,8 @@ def product_save(user_id, data):
         user=user,
         status="Ожидание подтверждения",
     )
-
     for i in PRODUCTS:
+ 
         if i.count < 0:
             a.bool_count = False
 
