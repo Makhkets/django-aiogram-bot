@@ -157,7 +157,8 @@ def product_save(user_id, data):
                 return j
         except:
             pass
-
+    for i in data:
+        l.debug(i)
     address = data[1].replace("нет", "").replace("Нет", "")
     phone = data[2].replace("нет", "").replace("Нет", "")
     price = data[3].replace("нет", "").replace("Нет", "")
