@@ -124,16 +124,19 @@ def get_number_product_1(string):
                     replace_text = f"{number[::-1]}шт"
                     orig_product = string.replace(replace_text, "").lower()
                     pr = Products.objects.get(product=orig_product)
-                    pr.count -= int(number[::-1])
+                    if number:
+                        pr.count -= int(number[::-1])
+                    else: pr.count -= 1
                     pr.save()
                     return pr
 
             replace_text = f"{number[::-1]}шт"
             orig_product = string.replace(replace_text, "").lower()
             pr = Products.objects.get(product=orig_product)
-            pr.count -= int(number[::-1])
+            if number:
+                pr.count -= int(number[::-1])
+            else: pr.count -= 1
             pr.save()
-
             return pr
     except Exception as ex:
         return f"Такой товар не найден ({string}) ({str(ex)})"
@@ -157,8 +160,7 @@ def product_save(user_id, data):
                 return j
         except:
             pass
-    for i in data:
-        l.debug(i)
+
     address = data[1].replace("нет", "").replace("Нет", "")
     phone = data[2].replace("нет", "").replace("Нет", "")
     price = data[3].replace("нет", "").replace("Нет", "")
