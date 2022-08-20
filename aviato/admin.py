@@ -32,9 +32,69 @@ class ApplicationsAdmin(admin.ModelAdmin):
         return ["note", "address", "product", "price", "phone", "status", "bool_status"]
 
     def save_model(self, request, obj, form, change):
-        obj.user = Profile.objects.all().first()
-        obj.save()
+        def get_number_product_1(string):
+            try:
+                number = ""
+                if len(string) == 0: return "❌ Уберите лишний пробел в строке <b>'Товар'</b> "
+                else:
+                    string = string.lower()
+                    i = string.split("шт")[0]
+                    for j in range(1, len(i)):
+                        if i[-j].isdigit():
+                            number += str(i[-j])
+                        if i[-j].isalpha():
 
+                            replace_text = f"{number[::-1]}шт"
+                            orig_product = string.replace(replace_text, "").lower()
+                            pr = Products.objects.get(product=orig_product)
+                            l.critical(pr)
+                            if number:
+                                pr.count -= int(number[::-1])
+                            else: pr.count -= 1
+                            pr.save()
+                            return pr
+
+                    replace_text = f"{number[::-1]}шт"
+                    orig_product = string.replace(replace_text, "").lower()
+                    pr = Products.objects.get(product=orig_product)
+                    l.critical(pr)
+
+                    if number:
+                        pr.count -= int(number[::-1])
+                    else: pr.count -= 1
+                    pr.save()
+                    return pr
+            except Exception as ex:
+                return f"Такой товар не найден ({string}) ({str(ex)})"        
+        
+
+        obj.user = Profile.objects.all().first()
+        l.debug(obj.product)
+
+        product = obj.product
+        product = product.split(" ")
+        PRODUCTS = []
+        for prd in product:
+            l.info(prd)
+            PRODUCTS.append(get_number_product_1(prd))
+            
+        for j in PRODUCTS:
+            try:
+                if "не найден" in j:
+                    return j
+                elif "❌" in j:
+                    return j
+            except:
+                pass
+
+        for i in PRODUCTS:
+            if i.count < 0:
+                obj.bool_count = False
+
+
+
+        obj.save()
+        obj.products.set(PRODUCTS)
 
 class ProductsAdmin(admin.ModelAdmin):
     list_display = ('id', 'availability', 'product', 'count', 'opt_price', "product_suum", "product_percent")
