@@ -1654,12 +1654,22 @@ async def add_employeees(call: types.CallbackQuery, state: FSMContext):
     user_id = user.user_id
 
     if product:
-        text = (
-            f"Товар: {str(product.product).replace('[', '').replace(']', '')}\n"
-            f"Цена: {product.price}\nАдрес: {product.address}\n"
-            f"Номер: {product.phone}\n"
-        ).replace("'", "")        
-    
+        if product.delivery_information:
+            text = (
+                f"Товар: {str(product.product).replace('[', '').replace(']', '')}\n"
+                f"Цена: {product.price}\nАдрес: {product.address}\n"
+                f"Номер: {product.phone}\n"
+                f"Информация о доставке: ✅ {product.delivery_information}\n"
+            ).replace("'", "")        
+        else: 
+            text = (
+                f"Товар: {str(product.product).replace('[', '').replace(']', '')}\n"
+                f"Цена: {product.price}\nАдрес: {product.address}\n"
+                f"Номер: {product.phone}\n"
+                f"Информация о доставке: ❌ Отсутствует ❌"
+            ).replace("'", "")   
+
+
         inlineh1 = types.InlineKeyboardMarkup()
         inlineh1.row(
             types.InlineKeyboardButton(
