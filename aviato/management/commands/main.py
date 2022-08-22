@@ -1654,8 +1654,12 @@ async def add_employeees(call: types.CallbackQuery, state: FSMContext):
     user_id = user.user_id
 
     if product:
-        cout_bool = await count_bool(product=product)
-        text = await get_message_from_product(product)
+        text = (
+            f"Товар: {str(product.product).replace('[', '').replace(']', '')}\n"
+            f"Цена: {product.price}\nАдрес: {product.address}\n"
+            f"Номер: {product.phone}\n"
+        ).replace("'", "")        
+    
         inlineh1 = types.InlineKeyboardMarkup()
         inlineh1.row(
             types.InlineKeyboardButton(
@@ -2155,7 +2159,7 @@ async def fdsf31fkx1(call: types.CallbackQuery, state: FSMContext):
 
 
 @dp.message_handler(state=D.tv2)
-async def fsfdsjfk23(message: types.Message, state: FSMContext):
+async def handler(message: types.Message, state: FSMContext):
     data = await state.get_data()
     new_count = message.text
     product_id = data["product_id"]
@@ -2165,7 +2169,7 @@ async def fsfdsjfk23(message: types.Message, state: FSMContext):
 
 
 @dp.callback_query_handler(text_startswith="change_price_opt", state="*")
-async def fdsf31fkx1(call: types.CallbackQuery, state: FSMContext):
+async def handler(call: types.CallbackQuery, state: FSMContext):
     await D.tv3.set()
     product_id = call.data.split(":")[1]
     await state.update_data(product_id=product_id)
@@ -2173,7 +2177,7 @@ async def fdsf31fkx1(call: types.CallbackQuery, state: FSMContext):
 
 
 @dp.message_handler(state=D.tv3)
-async def fsfdsjfk23(message: types.Message, state: FSMContext):
+async def handler(message: types.Message, state: FSMContext):
     data = await state.get_data()
     price = message.text
     product_id = data["product_id"]
