@@ -48,7 +48,7 @@ class Products(models.Model):
 class Applications(models.Model):
     note = models.CharField(max_length=5000, verbose_name="Примечание")
     address = models.CharField(max_length=5000, verbose_name="Адрес")
-    product = models.CharField(max_length=5000, verbose_name="Товар")
+    product = models.CharField(max_length=5000, verbose_name="Товар", null=True, blank=True)
     price = models.CharField(max_length=100000, verbose_name="Цена")
     phone = models.CharField(max_length=100, verbose_name="Номер")
     checks_document = models.CharField(max_length=1000, verbose_name="Чек", blank=True, null=True)
@@ -63,8 +63,8 @@ class Applications(models.Model):
     location_time = models.CharField(max_length=3000, verbose_name="Время локации", null=True, blank=True)
     time_update_location = models.DateTimeField(auto_now=True, verbose_name="Время изменения локации")
     user = models.ForeignKey(Profile, on_delete=models.PROTECT, verbose_name="Добавил")
-    products = models.ManyToManyField(Products, verbose_name="Привязанный товар")
-    bool_count = models.BooleanField(default=True, verbose_name="Хватает ли количество")
+    products = models.ManyToManyField(Products, verbose_name="Привязанный товар", null=True, blank=True)
+    bool_count = models.BooleanField(default=True, verbose_name="Хватает ли количество", null=True, blank=True)
 
     def __str__(self):
         return str(self.product)

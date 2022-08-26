@@ -69,32 +69,34 @@ class ApplicationsAdmin(admin.ModelAdmin):
         
 
         obj.user = Profile.objects.all().first()
-        l.debug(obj.product)
 
         product = obj.product
-        product = product.split(" ")
-        PRODUCTS = []
-        for prd in product:
-            l.info(prd)
-            PRODUCTS.append(get_number_product_1(prd))
-            
-        for j in PRODUCTS:
-            try:
-                if "не найден" in j:
-                    return j
-                elif "❌" in j:
-                    return j
-            except:
-                pass
+        if product is not None:
+            product = product.split(" ")
+            PRODUCTS = []
+            for prd in product:
+                l.info(prd)
+                PRODUCTS.append(get_number_product_1(prd))
+                
+            for j in PRODUCTS:
+                try:
+                    if "не найден" in j:
+                        return j
+                    elif "❌" in j:
+                        return j
+                except:
+                    pass
 
-        for i in PRODUCTS:
-            if i.count < 0:
-                obj.bool_count = False
+            for i in PRODUCTS:
+                if i.count < 0:
+                    obj.bool_count = False
 
-
+            obj.products.set(PRODUCTS)
+            obj.save()
+        else: obj.bool_count = None
 
         obj.save()
-        obj.products.set(PRODUCTS)
+
 
 class ProductsAdmin(admin.ModelAdmin):
     list_display = ('id', 'availability', 'product', 'count', 'opt_price', "product_suum", "product_percent")

@@ -31,6 +31,7 @@ class D(StatesGroup):
     code = State()
     name = State()
     note = State()
+    note1 = State()
     address = State()
     prod = State()
     match = State()
@@ -246,7 +247,6 @@ async def add_employeees(call: types.CallbackQuery, state: FSMContext):
         "Выберите роль будущего сотрудника:", reply_markup=employees_role_inline()
     )
     await cloud()
-
 
 @dp.callback_query_handler(text_startswith="supplier_code", state="*")
 async def dsa1rfxsf3(call: types.CallbackQuery, state: FSMContext):
@@ -495,7 +495,40 @@ async def code(message: types.Message, state: FSMContext):
 
 @dp.message_handler(text="✍ Добавить заявку", state="*")
 async def userrequests(message: types.Message, state: FSMContext):
-    await message.answer(
+    await message.answer("🎤 Выберите вид добавления заявки: ", reply_markup=get_choice_application())
+
+
+# bez_product
+@dp.callback_query_handler(text_startswith="bez_product", state="*")
+async def add_employeees(call: types.CallbackQuery, state: FSMContext):
+    await call.message.delete()
+    await call.message.answer(
+        "🖋 Заполните и отправьте следующий шаблон\n\nАдрес\nНомер (только цифры)\nЦена (число)\nПримечание\n\nЧтобы отменить загрузку товара напишите /start"
+    )
+    await D.note1.set()
+    await cloud()
+
+@dp.message_handler(state=D.note1)
+async def userrequests(message: types.Message, state: FSMContext):
+    data = message.text.split("\n")
+    text = await product_save_bez(user_id=str(message.from_user.id), data=data)
+    try:
+        operators = await get_operators()
+        for operator in operators:
+            await bot.send_message(
+                operator.user_id, "⌛ У вас есть необработанный заказ"
+            )
+    except:
+        pass
+    await state.finish()
+    await message.answer(text)
+    await cloud()
+
+
+@dp.callback_query_handler(text_startswith="s_product", state="*")
+async def add_employeees(call: types.CallbackQuery, state: FSMContext):
+    await call.message.delete()
+    await call.message.answer(
         "🖋 Заполните и отправьте следующий шаблон\n\nТовар\nАдрес\nНомер (только цифры)\nЦена (число)\nПримечание\n\nЧтобы отменить загрузку товара напишите /start"
     )
     await D.note.set()
@@ -504,6 +537,7 @@ async def userrequests(message: types.Message, state: FSMContext):
 
 @dp.message_handler(state=D.note)
 async def userrequests(message: types.Message, state: FSMContext):
+    await message.delete()
     data = message.text.split("\n")
     text = await product_save(user_id=str(message.from_user.id), data=data)
     try:
@@ -1300,7 +1334,7 @@ async def employees(message: types.Message):
             inlineh1 = types.InlineKeyboardMarkup()
             inlineh1.row(
                 types.InlineKeyboardButton(
-                    "✅ Отправить товар на упаковку",
+                    "✅ Ввести направление",
                     callback_data=f"confirmed_request:{product.pk}",
                 )
             )
@@ -1348,7 +1382,7 @@ async def add_employe(message: types.Message, state: FSMContext):
     try:
         packers = await get_all_packers()
         for packer in packers:
-            await bot.send_message(packer.user_id, "⌛ У вас есть неупакованный заказ")
+            await bot.send_message(packer.user_id, "⌛ У вас есть необработанный заказ")
     except Exception as ex:
         l.critical(ex)
 
@@ -1362,6 +1396,67 @@ async def add_employe(message: types.Message, state: FSMContext):
     await cloud()
 
 
+# peredan_dispatcher
+@dp.callback_query_handler(text_startswith="peredan_dispatcher")
+async def handler(call: types.CallbackQuery, state: FSMContext):
+    await call.message.delete()
+    product_id = call.data.split(":")[1]
+    text = await product_pack_conf(product_id=product_id)
+    await call.message.answer(text)
+    await cloud()
+    await get_menu_call(call=call)
+
+    try:
+        logists = await get_logists()
+        for logist in logists:
+            await bot.send_message(
+                logist.user_id,
+                "❗ У вас есть необработанныее заказы",
+            )
+    except:
+        pass
+
+@dp.message_handler(text="📊 Необработанные заказы", state="*")
+async def employees(message: types.Message):
+    products = await get_packers()
+    if len(products) >= 1:
+        for product in products:
+            cout_bool = await count_bool(product=product)
+            text = await get_message_from_product(product)
+            inlineh1 = types.InlineKeyboardMarkup()
+            inlineh1.row(
+                    types.InlineKeyboardButton("✅ Передать диспетчеру", callback_data=f"peredan_dispatcher:{product.pk}"),
+                    types.InlineKeyboardButton("Скрыть", callback_data=f"message_hide")
+            )
+
+            photos = [ph.photo for ph in product.products.all()]
+            inlineh2 = types.InlineKeyboardMarkup()
+            inlineh2.row(
+                types.InlineKeyboardButton("Скрыть", callback_data=f"message_hide")
+            )
+            for p in photos:
+                try:
+                    await message.answer_photo(photo=p, reply_markup=inlineh2)
+                except:
+                    pass
+            if product.checks_document is None:
+                pass
+            else:
+                try:
+                    await message.answer_photo(
+                        photo=open(product.checks_document, "rb"),
+                        reply_markup=inlineh2,
+                        caption="Чек",
+                    )
+                except: await message.answer("❌ Чек не найден")
+            await message.answer(text, reply_markup=inlineh1)
+
+    else:
+        await message.answer("❌ Ничего не найдено")
+
+
+
+
 @dp.message_handler(text="⚡ Неупокованные заказы", state="*")
 async def employees(message: types.Message):
     products = await get_pack_products()
@@ -1371,8 +1466,8 @@ async def employees(message: types.Message):
             inlineh1 = types.InlineKeyboardMarkup()
             inlineh1.row(
                 types.InlineKeyboardButton(
-                    "✅ Передан диспетчеру",
-                    callback_data=f"confirmed2_request:{product.pk}",
+                    "✅ Передать логисту",
+                    callback_data=f"product_pack_logist:{product.pk}",
                 )
             )
 
@@ -1402,6 +1497,15 @@ async def employees(message: types.Message):
         await message.answer("Пока нет заявок для упаковки.")
     await cloud()
 
+# Передан логисту
+@dp.callback_query_handler(text_startswith="product_pack_logist")
+async def handler(call: types.CallbackQuery, state: FSMContext):
+    await call.message.delete()
+    product_id = call.data.split(":")[1]
+    text = await product_pack_logist(product_id=product_id)
+    await call.message.answer(text)
+    await get_menu_call(call=call)
+
 
 @dp.callback_query_handler(text_startswith="confirmed2_request", state="*")
 async def add_employeees(call: types.CallbackQuery, state: FSMContext):
@@ -1412,7 +1516,7 @@ async def add_employeees(call: types.CallbackQuery, state: FSMContext):
         for logist in logists:
             await bot.send_message(
                 logist.user_id,
-                "❗ У вас есть необработанныее заказы <b>для водителей</b>",
+                "❗ У вас есть необработанныее заказы",
             )
     except:
         pass

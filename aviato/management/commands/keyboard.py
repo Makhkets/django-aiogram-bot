@@ -42,6 +42,7 @@ def logist_menu():
 def packer_menu():
     menu = types.ReplyKeyboardMarkup(resize_keyboard=True)
     menu.row("⚡ Неупокованные заказы")
+    menu.row("📊 Необработанные заказы")
     return menu
 
 def supplier_menu():
@@ -75,3 +76,9 @@ def question_photo():
     menu = types.ReplyKeyboardMarkup(resize_keyboard=True)
     menu.row("✅ Да есть фото", "❌ Фото отсутствует")
     return menu
+
+def get_choice_application():
+    inline_kb_full = types.InlineKeyboardMarkup()
+    inline_kb_full.row(types.InlineKeyboardButton("🎁 Заявка с Товаром", callback_data="s_product"))
+    inline_kb_full.row(types.InlineKeyboardButton("⚠ Заявка без Товара", callback_data="bez_product"))
+    return inline_kb_full

@@ -201,13 +201,12 @@ def get_confirm_products():
 
 @sync_to_async
 def get_confirmed_products():
-    return Applications.objects.filter(status="Подтвержден")
+    return Applications.objects.filter(status="Передан логисту")
 
 
 @sync_to_async
 def get_pack_products():
-    return Applications.objects.filter(status="Передан упаковщику")
-
+    return Applications.objects.filter(status="Подтвержден")
 
 @sync_to_async
 def pack_to_drive():
@@ -238,10 +237,20 @@ def product_pack_conf(product_id):
         a = Applications.objects.get(pk=product_id)
         a.status = "Упакован"
         a.save()
-        return "✅ Товар упакован и передан диспетчеру"
+        return "✅ Товар упакован и передан Логисту"
     except Exception as ex:
         return "❌ " + str(ex)
 
+
+@sync_to_async
+def product_pack_logist(product_id):
+    try:
+        a = Applications.objects.get(pk=product_id)
+        a.status = "Передан логисту"
+        a.save()
+        return "✅ Товар упакован и передан Логисту"
+    except Exception as ex:
+        return "❌ " + str(ex)
 
 @sync_to_async
 def report_info():
@@ -771,3 +780,30 @@ def change_phone(product_id, new_phone):
     p.save()
 
     return "✅ Успешно"
+
+
+
+@sync_to_async
+def product_save_bez(user_id, data):
+    try:
+        user = Profile.objects.get(user_id=str(user_id))
+
+        address = data[0].replace("нет", "").replace("Нет", "")
+        phone = data[1].replace("нет", "").replace("Нет", "")
+        price = data[2].replace("нет", "").replace("Нет", "")
+        note = data[3].replace("нет", "").replace("Нет", "")
+
+        a = Applications.objects.create(
+            note=note,
+            address=address,
+            phone=phone,
+            price=price,
+            user=user,
+            bool_count=None,
+            status="Ожидание подтверждения",
+        )
+
+        a.save()
+
+        return "✅ Успешно добавил заявку в базу"
+    except Exception as ex: return f"❌ Произошла ошибка ({str(ex)})" 
