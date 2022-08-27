@@ -352,12 +352,10 @@ async def dasdasdsa2(message: types.Message, state: FSMContext):
         else:
             inlineh1 = types.InlineKeyboardMarkup()
 
-###############################################################################################################
             inlineh1.row(
                     types.InlineKeyboardButton("🗳️ Логист", callback_data="remove_logist_r"), 
                     types.InlineKeyboardButton("👷‍♂️ Снабженец", callback_data="remove_snabj_r")
                 )
-###############################################################################################################
 
             inlineh1.row(
                 types.InlineKeyboardButton(
@@ -503,7 +501,7 @@ async def userrequests(message: types.Message, state: FSMContext):
 async def add_employeees(call: types.CallbackQuery, state: FSMContext):
     await call.message.delete()
     await call.message.answer(
-        "🖋 Заполните и отправьте следующий шаблон\n\nАдрес\nНомер (только цифры)\nЦена (число)\nПримечание\n\nЧтобы отменить загрузку товара напишите /start"
+        "🖋 Заполните и отправьте следующий шаблон\n\nТовар\nАдрес\nНомер (только цифры)\nЦена (число)\nПримечание\n\nЧтобы отменить загрузку товара напишите /start"
     )
     await D.note1.set()
     await cloud()
@@ -828,6 +826,11 @@ async def employees(message: types.Message):
         )
     )
     inlineh1.row(
+        types.InlineKeyboardButton(
+            "👁 У Логиста", callback_data="oj_net_logist"
+        )
+    )
+    inlineh1.row(
         types.InlineKeyboardButton("❌ Дорожный брак", callback_data="oj_dorozh_brak"),
         types.InlineKeyboardButton("❌ Фабричный брак", callback_data="oj_fabr_brak"),
     )
@@ -889,6 +892,53 @@ async def dfsfdslf(message: types.Message, state: FSMContext):
 
     else:
         await message.answer("❌ Ничего не найдено")
+
+
+# Нет у логиста
+@dp.callback_query_handler(text_startswith="oj_net_logist")
+async def add_employeees(call: types.CallbackQuery, state: FSMContext):
+    products = await net_v_nalichii_logist()
+
+    if len(products) >= 1:
+        for product in products:
+            orig_product = product.products.all()
+            text = ""
+            for t in orig_product:
+                text += f"Товар: {t.product}\nКоличество: {t.count}\n\n"
+
+            txt = await get_message_from_product(product)
+            text += txt
+
+            inlineh1 = types.InlineKeyboardMarkup()
+            inlineh1.row(
+                types.InlineKeyboardButton("Скрыть", callback_data=f"message_hide")
+            )
+
+            photos = [ph.photo for ph in product.products.all()]
+            inlineh2 = types.InlineKeyboardMarkup()
+            inlineh2.row(
+                types.InlineKeyboardButton("Скрыть", callback_data=f"message_hide")
+            )
+            for p in photos:
+                try:
+                    await call.message.answer_photo(photo=p, reply_markup=inlineh2)
+                except:
+                    pass
+
+            if product.checks_document is None:
+                pass
+            else:
+                try:
+                    await call.message.answer_photo(
+                        photo=open(product.checks_document, "rb"),
+                        reply_markup=inlineh2,
+                        caption="Чек",
+                    )
+                except: await call.message.answer("❌ Чек не найден")
+            await call.message.answer(text, reply_markup=inlineh1)
+
+    else:
+        await call.message.answer("❌ Ничего не найдено")
 
 
 # Нет в наличии
@@ -1416,7 +1466,7 @@ async def handler(call: types.CallbackQuery, state: FSMContext):
     except:
         pass
 
-@dp.message_handler(text="📊 Необработанные заказы", state="*")
+@dp.message_handler(text="📊 Неотправленные", state="*")
 async def employees(message: types.Message):
     products = await get_packers()
     if len(products) >= 1:

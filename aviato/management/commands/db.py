@@ -261,6 +261,7 @@ def report_info():
         confirmed = Applications.objects.filter(status="Подтвержден").count()
         canceled = Applications.objects.filter(status="Отменен").count()
         transferred = Applications.objects.filter(status="Передан упаковщику").count()
+        y_logist = Applications.objects.filter(status="Передан логисту").count()
         transferred_dispatcher = Applications.objects.filter(status="Упакован").count()
         drive = Applications.objects.filter(status="В дороге").count()
         delivered = Applications.objects.filter(status="Доставлен").count()
@@ -273,6 +274,7 @@ def report_info():
 Подтвержденные:  <b>{confirmed}</b>
 Отмененные:  <b>{canceled}</b>
 Переданные Упаковщику:  <b>{transferred}</b>
+У Логиста: <b>{y_logist}</b>
 Переданно диспетчеру:  <b>{transferred_dispatcher}</b>
 В дороге:  <b>{drive}</b>
 Дорожный брак: <b>{matchs2}</b>
@@ -659,6 +661,10 @@ def get_number_product(string):
     return number[::-1]
 
 @sync_to_async
+def net_v_nalichii_logist():
+    return Applications.objects.filter(status="Передан логисту")
+
+@sync_to_async
 def net_v_nalichii():
     return Applications.objects.filter(bool_count=False).exclude(status="Отменен").exclude(status="Доставлен")
 
@@ -788,12 +794,14 @@ def product_save_bez(user_id, data):
     try:
         user = Profile.objects.get(user_id=str(user_id))
 
-        address = data[0].replace("нет", "").replace("Нет", "")
-        phone = data[1].replace("нет", "").replace("Нет", "")
-        price = data[2].replace("нет", "").replace("Нет", "")
-        note = data[3].replace("нет", "").replace("Нет", "")
+        product = data[0].replace("нет", "").replace("Нет", "")
+        address = data[1].replace("нет", "").replace("Нет", "")
+        phone = data[2].replace("нет", "").replace("Нет", "")
+        price = data[3].replace("нет", "").replace("Нет", "")
+        note = data[4].replace("нет", "").replace("Нет", "")
 
         a = Applications.objects.create(
+            product=product,
             note=note,
             address=address,
             phone=phone,
