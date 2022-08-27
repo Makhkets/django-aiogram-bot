@@ -274,7 +274,7 @@ def report_info():
 Подтвержденные:  <b>{confirmed}</b>
 Отмененные:  <b>{canceled}</b>
 Переданные Упаковщику:  <b>{transferred}</b>
-У Логиста: <b>{y_logist}</b>
+Упакованные: <b>{y_logist}</b>
 Переданно диспетчеру:  <b>{transferred_dispatcher}</b>
 В дороге:  <b>{drive}</b>
 Дорожный брак: <b>{matchs2}</b>

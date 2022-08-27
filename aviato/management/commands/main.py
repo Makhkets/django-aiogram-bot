@@ -827,7 +827,7 @@ async def employees(message: types.Message):
     )
     inlineh1.row(
         types.InlineKeyboardButton(
-            "👁 У Логиста", callback_data="oj_net_logist"
+            "📦 Упакованные", callback_data="oj_net_logist"
         )
     )
     inlineh1.row(
@@ -841,7 +841,7 @@ async def employees(message: types.Message):
 
     inlineh1.row(
         types.InlineKeyboardButton(
-            "👷‍♂️ Переданные Упаковщику", callback_data="oj_packer"
+            "👷‍♂️ Переданные на упаковку", callback_data="oj_packer"
         )
     )
 
@@ -1516,7 +1516,7 @@ async def employees(message: types.Message):
             inlineh1 = types.InlineKeyboardMarkup()
             inlineh1.row(
                 types.InlineKeyboardButton(
-                    "✅ Передать логисту",
+                    "✅ Упакован",
                     callback_data=f"product_pack_logist:{product.pk}",
                 )
             )
