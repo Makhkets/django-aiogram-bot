@@ -81,8 +81,10 @@ class ApplicationsAdmin(admin.ModelAdmin):
             for j in PRODUCTS:
                 try:
                     if "не найден" in j:
+                        obj.save()
                         return j
                     elif "❌" in j:
+                        obj.save()
                         return j
                 except:
                     pass
@@ -94,8 +96,9 @@ class ApplicationsAdmin(admin.ModelAdmin):
             obj.products.set(PRODUCTS)
             obj.save()
         else: obj.bool_count = None
-
+        l.critical("dffsdfsd")
         obj.save()
+        return super().save_model()
 
 
 class ProductsAdmin(admin.ModelAdmin):
