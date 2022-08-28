@@ -2,6 +2,8 @@ from django.db import models
 import string
 import random
 
+
+
 def generate_random_string(length):
     letters = string.ascii_lowercase
     rand_string = ''.join(random.choice(letters) for i in range(length))
@@ -46,6 +48,19 @@ class Products(models.Model):
 
 
 class Applications(models.Model):
+
+    CHOICES = (
+        ("Подтвержден", "Подтвержден"),
+        ("Отменен", "Отменен"),
+        ("Передан упаковщику", "Передан упаковщику"),
+        ("Передан логисту", "Передан логисту"),
+        ("Упакован", "Упакован"),
+        ("Доставлен", "Доставлен"),
+        ("Фабричный брак", "Фабричный брак"),
+        ("Дорожный брак", "Дорожный брак"),
+        ("Ожидание подтверждения", "Ожидание подтверждения"),
+    )
+
     note = models.CharField(max_length=5000, verbose_name="Примечание")
     address = models.CharField(max_length=5000, verbose_name="Адрес")
     product = models.CharField(max_length=5000, verbose_name="Товар", null=True, blank=True)
@@ -58,7 +73,7 @@ class Applications(models.Model):
     bool_status = models.BooleanField(verbose_name="Подт / Отм", null=True, blank=True)
     create_time = models.DateField(auto_now=True, verbose_name="Время создания")
     driver = models.ForeignKey(Profile, on_delete=models.PROTECT, verbose_name="Водитель", related_name="drive_user", null=True, blank=True)
-    status = models.CharField(max_length=200, blank=True, null=True, default="Ожидание подтверждения", verbose_name="Статус")
+    status = models.CharField(max_length=200, blank=True, null=True, default="Ожидание подтверждения", verbose_name="Статус", choices=CHOICES)
     location = models.CharField(max_length=3000, verbose_name="Локация", blank=True, null=True)
     location_time = models.CharField(max_length=3000, verbose_name="Время локации", null=True, blank=True)
     time_update_location = models.DateTimeField(auto_now=True, verbose_name="Время изменения локации")
