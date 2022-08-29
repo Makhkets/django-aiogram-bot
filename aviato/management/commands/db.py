@@ -1,13 +1,22 @@
-from loguru import logger as l
-
+import re
 import datetime
-from re import T
-from asgiref.sync import sync_to_async
 
 from aviato.models import *
 
-from django.db.utils import IntegrityError
+from asgiref.sync import sync_to_async
+from loguru import logger as l
 
+def convert_phone_number(phone):
+    dig = r'[\s-]*(\d)' * 6
+    for i in re.findall(r'([78])[\s\(]*(\d{3})[\s\)]*(\d)' + dig, phone):
+        res = ''.join(i)
+        return res[0].replace("8", "7") + res[1:]
+def convert_price(price):
+    return int(str(price).lower() \
+            .replace("-", "") \
+            .replace(".", "") \
+            .replace(",", "") \
+            .replace("т", "000"))
 
 @sync_to_async
 def get_user_or_create(user_id: str, username=None):
@@ -86,8 +95,8 @@ def product_edit(data, product_id):
         a.note = note
         a.address = address
         a.product = product
-        a.phone = phone
-        a.price = price
+        a.phone = convert_phone_number(phone)
+        a.price = convert_price(price)
         a.save()
 
         return "✅ Товар успешно изменен"
@@ -170,8 +179,8 @@ def product_save(user_id, data):
         note=note,
         address=address,
         product=product,
-        phone=phone,
-        price=price,
+        phone=convert_phone_number(phone),
+        price=convert_price(price),
         user=user,
         status="Ожидание подтверждения",
     )
@@ -216,7 +225,6 @@ def pack_to_drive():
 @sync_to_async
 def pack_to_logist():
     return Applications.objects.filter(status="Упакован")
-
 
 @sync_to_async
 def delete_product(product_id):
@@ -441,7 +449,7 @@ def product_match(title, price, title2, price2, product_id, status):
         p = Applications.objects.get(pk=product_id)
         p.status = status
         p.product = title2
-        p.price = price2
+        p.price = convert_price(price2)
         p.save()
         #
         Applications.objects.create(
@@ -449,7 +457,7 @@ def product_match(title, price, title2, price2, product_id, status):
             address=p.address,
             product=title,
             phone=p.phone,
-            price=price,
+            price=convert_price(price),
             photo=p.photo,
             user=p.user,
             status="Передан упаковщику",
@@ -460,7 +468,7 @@ def product_match(title, price, title2, price2, product_id, status):
             address=p.address,
             product=title2,
             phone=p.phone,
-            price=price2,
+            price=convert_price(price2),
             photo=p.photo,
             user=p.user,
             status="Доставлен",
@@ -682,21 +690,21 @@ def add_product_to_db(data):
             P = Products.objects.create(
                 product=product,
                 count=count,
-                opt_price=price,
+                opt_price=convert_price(price),
             )
 
         elif "http" in str(photo):
             P = Products.objects.create(
                 product=product,
                 count=count,
-                opt_price=price,
+                opt_price=convert_price(price),
                 photo=photo
             )
 
         else: return "❌ Неправильно ведена ссылка на фото (если оно отсутствует введите прочерк ( - ) без скобок )"
-        P.product_suum = int(price) * int(count)
+        P.product_suum = int(convert_price(price)) * int(count)
         P.fake_count = count
-        P.product_percent = (int(price) * int(count)) / 100 * 2.5
+        P.product_percent = (int(convert_price(price)) * int(count)) / 100 * 2.5
         P.save()
         return "✅ Успешно добавлен товар"
     except Exception as ex: return f"❌ Ошибка {str(ex)}"
@@ -731,7 +739,7 @@ def change_price_tv(product_id, new_count):
 @sync_to_async
 def сhange_opt(product_id, price):
     p = Products.objects.get(pk=product_id)
-    p.opt_price = price
+    p.opt_price = convert_price(price)
     p.save()
     return "✅ Успешно"
 
@@ -774,15 +782,14 @@ def change_note(product_id, new_note):
 @sync_to_async
 def change_price(product_id, new_price):
     p = Applications.objects.get(pk=product_id)
-    p.price = new_price
+    p.price = convert_price(new_price)
     p.save()
-
     return "✅ Успешно"
 
 @sync_to_async
 def change_phone(product_id, new_phone):
     p = Applications.objects.get(pk=product_id)
-    p.phone = new_phone
+    p.phone = convert_phone_number(new_phone)
     p.save()
 
     return "✅ Успешно"
@@ -804,8 +811,8 @@ def product_save_bez(user_id, data):
             product=product,
             note=note,
             address=address,
-            phone=phone,
-            price=price,
+            phone=convert_phone_number(phone),
+            price=convert_price(price),
             user=user,
             bool_count=None,
             status="Ожидание подтверждения",

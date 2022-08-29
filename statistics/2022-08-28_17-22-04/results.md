@@ -1,7 +1,3 @@
-Заказ на 20 000 рублей (сделано) 
-### Техническое задание проекта: https://miro.com/app/board/uXjVOsUyFh4=/?userEmail=rahimaliev999@gmail.com&track=true&utm_source=notification&utm_medium=email&utm_campaign=add-to-team-and-board&utm_content=go-to-board
-
-#
 # Summary
 
 Date : 2022-08-28 17:22:04
@@ -23,14 +19,3 @@ Summary / [Details](details.md) / [Diff Summary](diff.md) / [Diff Details](diff-
 | JSON | 1 | 72 | 0 | 1 | 73 |
 | Markdown | 3 | 44 | 0 | 14 | 58 |
 | pip requirements | 1 | 6 | 0 | 0 | 6 |
-#
-
-## Часть скринов проекта
-![ссылка](images/bot1.png)
-![ссылка](images/bot2.png)
-![ссылка](images/server1.png)
-
-***
-## Запуск бота и web админки
-* ### python manage.py runserver
-* ### python manage.py bot
