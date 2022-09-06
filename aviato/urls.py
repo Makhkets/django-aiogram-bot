@@ -104,6 +104,8 @@ def data(request, id):
                 "locations": str(i.location).split("|"),
                 "last_location": str(i.location).split("|")[-1].split(".")[0].split(":")[::1][0] + ":" + str(i.location).split("|")[-1].split(".")[0].split(":")[::1][-1],
                 "phone": str(i.phone),
+                "main_status": str(i.status),
+                "status": str(i.status),
                 "id": str(i.pk),
             })
 

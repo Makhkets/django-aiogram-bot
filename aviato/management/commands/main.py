@@ -81,10 +81,11 @@ async def get_message_from_product(product):
         f"{cout_bool}\n"
         f"Примечание: {product.note}\nАдресс: {product.address}\n\n"
         f"Товар(ы): \n<b>{products_text.replace(' ', '')}</b>\n"
-        f"Цена: <code>{product.price}</code> рублей\nНомер: <code>{product.phone}</code>\n"
+        f"Цена: <code>{product.price}</code> рублей\nНомер: {product.phone}\n"
         f"Владелец товара: @{product.user.username} ({product.user.role})\n\n"
         f"ID: <code>{product.pk}</code>\nЛокация водителя: {str(product.location).replace('None', 'Неизвестно')}\n"
-        f"Изменение локации было в: {str(product.time_update_location).split('.')[0]}\n"
+        f"Изменение локации было: <code>{str(product.time_update_location).split('.')[0]}</code>\n"
+        f"Заявка создана: <code>{str(product.create_time).split('.')[0]}</code>\n"
     )
 
     return text.replace("'", "")
