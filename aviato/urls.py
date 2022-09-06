@@ -94,10 +94,11 @@ def data(request, id):
             new_time_data = []
             for __ in str(i.location_time).split("|"):
                 new_time_data.append(str(__).split(".")[0].split(":")[::1][0] + ":" + str(__).split(".")[0].split(":")[::1][-1])
+            print()
             data.append({
                 "products": str(i.product),
                 "address": str(i.address),
-                "time_update_location": str(p.time_update_location).split(".")[0].split(":")[::1][0] + ":" + str(p.time_update_location).split(".")[0].split(":")[::1][-1],
+                "time_update_location": str(i.time_update_location).split(".")[0].split(":")[::1][0] + ":" + str(i.time_update_location).split(".")[0].split(":")[::1][-1],
                 "time_locations": new_time_data,
                 "price": str(i.price),
                 "locations": str(i.location).split("|"),
