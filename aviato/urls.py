@@ -92,8 +92,8 @@ def data(request, id):
         data = []
         for i in p:
             new_time_data = []
-            for i in str(i.location_time).split("|"):
-                new_time_data.append(str(i).split(".")[0].split(":")[::1][0] + ":" + str(i).split(".")[0].split(":")[::1][-1])
+            for __ in str(i.location_time).split("|"):
+                new_time_data.append(str(__).split(".")[0].split(":")[::1][0] + ":" + str(__).split(".")[0].split(":")[::1][-1])
             data.append({
                 "products": str(i.product),
                 "address": str(i.address),
