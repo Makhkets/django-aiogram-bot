@@ -58,7 +58,8 @@ def data(request, id):
                     "products": p.product,
                     "address": p.address,
                     "status": "Ваш товар в дороге!",
-                    "time_update_location": p.time_update_location,
+                    "main_status": p.status,
+                    "time_update_location": str(p.time_update_location).split(".")[0].split(":")[::1][0] + ":" + str(p.time_update_location).split(".")[0].split(":")[::1][-1],
                     "price": p.price,
                     "location": p.location,
                     "phone": p.phone,
@@ -71,7 +72,8 @@ def data(request, id):
                     "products": p.product,
                     "address": p.address,
                     "status": "Ваш товар подготавливается к отправке!",
-                    "time_update_location": p.time_update_location,
+                    "main_status": p.status,
+                    "time_update_location": str(p.time_update_location).split(".")[0].split(":")[::1][0] + ":" + str(p.time_update_location).split(".")[0].split(":")[::1][-1],
                     "price": p.price,
                     "location": p.location,
                     "phone": p.phone,
@@ -89,14 +91,17 @@ def data(request, id):
     if len(p) >= 1:
         data = []
         for i in p:
+            new_time_data = []
+            for i in str(i.location_time).split("|"):
+                new_time_data.append(str(i).split(".")[0].split(":")[::1][0] + ":" + str(i).split(".")[0].split(":")[::1][-1])
             data.append({
                 "products": str(i.product),
                 "address": str(i.address),
-                "last_time_update_location": str(i.time_update_location),
-                "time_locations": str(i.location_time).split("|"),
+                "time_update_location": str(p.time_update_location).split(".")[0].split(":")[::1][0] + ":" + str(p.time_update_location).split(".")[0].split(":")[::1][-1],
+                "time_locations": new_time_data,
                 "price": str(i.price),
                 "locations": str(i.location).split("|"),
-                "last_location": str(i.location).split("|")[-1],
+                "last_location": str(i.location).split("|")[-1].split(".")[0].split(":")[::1][0] + ":" + str(i.location).split("|")[-1].split(".")[0].split(":")[::1][-1],
                 "phone": str(i.phone),
                 "id": str(i.pk),
             })
