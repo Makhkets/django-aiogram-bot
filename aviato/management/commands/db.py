@@ -445,7 +445,7 @@ def driver_confrimed(user, product):
 
 @sync_to_async
 def product_match(title, price, title2, price2, product_id, status):
-    try:
+    # try:
         p = Applications.objects.get(pk=product_id)
         p.status = status
         p.product = title2
@@ -458,7 +458,6 @@ def product_match(title, price, title2, price2, product_id, status):
             product=title,
             phone=p.phone,
             price=convert_price(price),
-            photo=p.photo,
             user=p.user,
             status="Передан упаковщику",
         )
@@ -469,14 +468,13 @@ def product_match(title, price, title2, price2, product_id, status):
             product=title2,
             phone=p.phone,
             price=convert_price(price2),
-            photo=p.photo,
             user=p.user,
             status="Доставлен",
         )
 
         return "✅ Успешно"
-    except Exception as ex:
-        return "❌ " + str(ex)
+    # except Exception as ex:
+    #     return "❌ " + str(ex) + "((()))"
 
 
 @sync_to_async
