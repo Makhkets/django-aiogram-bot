@@ -18,6 +18,18 @@ def convert_price(price):
             .replace(",", "") \
             .replace("т", "000"))
 
+def convert_phone_number_to_seven(phone):
+    dig = r'[\s-]*(\d)' * 6
+    for i in re.findall(r'([78])[\s\(]*(\d{3})[\s\)]*(\d)' + dig, phone):
+        res = ''.join(i)
+        return res[0].replace("8", "7") + res[1:]
+def convert_price(price):
+    return int(str(price).lower() \
+            .replace("-", "") \
+            .replace(".", "") \
+            .replace(",", "") \
+            .replace("т", "000"))
+
 @sync_to_async
 def get_user_or_create(user_id: str, username=None):
     try:
@@ -95,7 +107,7 @@ def product_edit(data, product_id):
         a.note = note
         a.address = address
         a.product = product
-        a.phone = convert_phone_number(phone)
+        a.phone = convert_phone_number_to_seven(phone)
         a.price = convert_price(price)
         a.save()
 
@@ -179,7 +191,7 @@ def product_save(user_id, data):
         note=note,
         address=address,
         product=product,
-        phone=convert_phone_number(phone),
+        phone=convert_phone_number_to_seven(phone),
         price=convert_price(price),
         user=user,
         status="Ожидание подтверждения",
@@ -809,7 +821,7 @@ def product_save_bez(user_id, data):
             product=product,
             note=note,
             address=address,
-            phone=convert_phone_number(phone),
+            phone=convert_phone_number_to_seven(phone),
             price=convert_price(price),
             user=user,
             bool_count=None,
