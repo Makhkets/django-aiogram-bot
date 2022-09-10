@@ -719,12 +719,12 @@ async def employees(message: types.Message, state: FSMContext):
 
 @dp.callback_query_handler(text_startswith="confirm_request", state="*")
 async def add_employeees(call: types.CallbackQuery, state: FSMContext):
-    product_id = call.data.split(":")[1]
+    product_id = call.data.split(":")[1] ##################################################################################################
     text = await confirm_product(product_id=product_id)
     try:
-        logists = await get_logists()
-        for logist in logists:
-            await bot.send_message(logist.user_id, "⌛ У вас есть необработанный заказ")
+        packers = await get_all_packers()
+        for packer in packers:
+            await bot.send_message(packer.user_id, "⌛ У вас есть необработанный заказ")
     except:
         pass
     await get_menu_call(call)
@@ -1301,7 +1301,7 @@ async def add_employeees(call: types.CallbackQuery, state: FSMContext):
         await call.message.answer("❌ Ничего не найдено")
 
 
-# Подтвержденные
+# 
 @dp.callback_query_handler(text_startswith="oj_confirmd", state="*")
 async def add_employeees(call: types.CallbackQuery, state: FSMContext):
     products = await get_confirmed()
@@ -1562,6 +1562,17 @@ async def handler(call: types.CallbackQuery, state: FSMContext):
     product_id = call.data.split(":")[1]
     text = await product_pack_logist(product_id=product_id)
     await call.message.answer(text)
+
+    try:
+        logists = await get_logists()
+        for logist in logists:
+            await bot.send_message(
+                logist.user_id,
+                "❗ У вас есть необработанныее заказы",
+            )
+    except:
+        pass
+
     await get_menu_call(call=call)
 
 

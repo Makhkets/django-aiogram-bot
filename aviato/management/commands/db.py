@@ -514,7 +514,7 @@ def find_products(info):
         if len(info) < 5:
             return None
         else:
-            p = Applications.objects.filter(phone__contains=info)
+            p = Applications.objects.filter(phone__contains=convert_phone_number_to_seven(info))
             if len(p) >= 1:
                 return p
 
