@@ -257,7 +257,7 @@ def product_pack_conf(product_id):
         a = Applications.objects.get(pk=product_id)
         a.status = "Упакован"
         a.save()
-        return "✅ Товар упакован и передан Логисту"
+        return "✅ Товар передан диспетчеру"
     except Exception as ex:
         return "❌ " + str(ex)
 

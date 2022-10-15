@@ -1382,7 +1382,7 @@ async def add_employeees(call: types.CallbackQuery, state: FSMContext):
         await call.message.answer("❌ Ничего не найдено")
 
 
-@dp.message_handler(text="📚 Подтвержденные заявки", state="*")
+@dp.message_handler(text="📚 Упакованные", state="*")
 async def employees(message: types.Message):
     products = await get_confirmed_products()
     if len(products) >= 1:
