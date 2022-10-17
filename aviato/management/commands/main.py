@@ -71,7 +71,7 @@ async def count_bool(product):
 async def get_message_from_product(product):
     cout_bool = await count_bool(product=product)
     products_text = ""
-    if "[" in str(product.product) and "]" in str(product.product):
+    if "," in str(product.product):
         for i in str(product.product).replace('[', '').replace(']', '').split(','):
             products_text += f"{i}\n"
     else:
