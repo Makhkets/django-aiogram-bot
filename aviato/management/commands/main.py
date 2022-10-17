@@ -68,19 +68,20 @@ async def count_bool(product):
         return "✅ Есть в наличии"
     return "❌ Нет в наличии ❌"
 
-
-
-
-
 async def get_message_from_product(product):
     cout_bool = await count_bool(product=product)
     products_text = ""
-    for i in str(product.product).replace('[', '').replace(']', '').split(','):
-        products_text += f"{i}\n"
+    if "[" in str(product.product) and "]" in str(product.product):
+        for i in str(product.product).replace('[', '').replace(']', '').split(','):
+            products_text += f"{i}\n"
+    else:
+        for i in str(product.product).split(" "):
+            products_text += f"{i}\n"
+
     text = (
         f"{cout_bool}\n"
         f"Примечание: {product.note}\nАдресс: {product.address}\n\n"
-        f"Товар(ы): \n<b>{products_text.replace(' ', '')}</b>\n"
+        f"Товар(ы): \n<b>{products_text}</b>\n"
         f"Цена: <code>{product.price}</code> рублей\nНомер: {product.phone}\n"
         f"Владелец товара: @{product.user.username} ({product.user.role})\n\n"
         f"ID: <code>{product.pk}</code>\nЛокация водителя: {str(product.location).replace('None', 'Неизвестно')}\n"
