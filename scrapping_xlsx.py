@@ -1,15 +1,31 @@
 import re
 
-def convert_phone_number(phone):
-    dig = r'[\s-]*(\d)' * 6
-    for i in re.findall(r'([78])[\s\(]*(\d{3})[\s\)]*(\d)' + dig, phone):
-        res = ''.join(i)
-        return res[0].replace("8", "7") + res[1:]
 
 def convert_price(price):
-    return int(str(price).lower() \
-            .replace("-", "") \
-            .replace(".", "") \
-            .replace(",", "") \
-            .replace("т", "000"))
+    convert = ""
+    def string_numbers_convert(string):
+        flag = [False, False]
+        for i in string:
+            if i.isdigit():
+                flag[0] = True
 
+        if flag[0]:
+            for i in string:
+                if i == "т":
+                    flag[1] = True
+        
+        if flag[0] and flag[1]: return True
+        return False
+        
+    for string in price.split(" "):
+        if string_numbers_convert(string=string):
+            convert += string.replace("т", "000")
+
+
+    return int(str(convert) \
+        .replace(".", "") \
+            .replace(",", "") \
+                .replace(";", "")
+    )
+
+print(convert_price("рублей 1т,"))

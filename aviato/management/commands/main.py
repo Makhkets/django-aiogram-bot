@@ -71,6 +71,10 @@ async def count_bool(product):
 async def get_message_from_product(product):
     cout_bool = await count_bool(product=product)
     products_text = ""
+    def get_direction():
+        if product.direction is None:
+            return "Не указано";
+        else: return product.direction   
     if "," in str(product.product):
         for i in str(product.product).replace('[', '').replace(']', '').split(','):
             products_text += f"{i}\n"
@@ -78,12 +82,14 @@ async def get_message_from_product(product):
         for i in str(product.product).split(" "):
             products_text += f"{i}\n"
 
+
     text = (
         f"{cout_bool}\n"
         f"Примечание: {product.note}\nАдресс: {product.address}\n\n"
         f"Товар(ы): \n<b>{products_text}</b>\n"
         f"Цена: <code>{product.price}</code> рублей\nНомер: {product.phone}\n"
-        f"Владелец товара: @{product.user.username} ({product.user.role})\n\n"
+        f"Направление: <b>{get_direction()}</b>\n"
+        f"Владелец товара: <b>@{product.user.username} ({product.user.role})</b>\n\n"
         f"ID: <code>{product.pk}</code>\nЛокация водителя: {str(product.location).replace('None', 'Неизвестно')}\n"
         f"Изменение локации было: <code>{str(product.time_update_location).split('.')[0]}</code>\n"
         f"Заявка создана: <code>{str(product.create_time).split('.')[0]}</code>\n"

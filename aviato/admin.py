@@ -18,15 +18,15 @@ class ProfileAdmin(admin.ModelAdmin):
 
 class ApplicationsAdmin(admin.ModelAdmin):
     list_display = ('id', 'create_time', 'product', 'address', 'price',
-                    'phone', 'bool_status', 'status', 'note',
+                    'phone', 'bool_status', 'status', 'note', "direction",
                     'driver', 'location', "delivery_information", 'user')
 
     search_fields = ['id', 'note', 'address', 'phone', 'price',
-                     'time_update_location', 'product',
+                     'time_update_location', 'product', "direction",
                      'user__first_name', 'status', 'location']
     # list_editable = ('note', 'address', 'phone', 'price', 'product', 'user', 'status', 'driver', "location")
     list_filter = ('phone', 'time_update_location', 'status',
-                   'driver')
+                   'driver', "direction")
 
     def get_fields(self, request, obj):
         return ["note", "address", "product", "price", "phone", "status", "bool_status"]

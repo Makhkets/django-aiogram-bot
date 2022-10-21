@@ -11,24 +11,39 @@ def convert_phone_number(phone):
     for i in re.findall(r'([78])[\s\(]*(\d{3})[\s\)]*(\d)' + dig, phone):
         res = ''.join(i)
         return res[0].replace("7", "8") + res[1:]
-def convert_price(price):
-    return int(str(price).lower() \
-            .replace("-", "") \
-            .replace(".", "") \
-            .replace(",", "") \
-            .replace("т", "000"))
 
 def convert_phone_number_to_seven(phone):
     dig = r'[\s-]*(\d)' * 6
     for i in re.findall(r'([78])[\s\(]*(\d{3})[\s\)]*(\d)' + dig, phone):
         res = ''.join(i)
         return res[0].replace("8", "7") + res[1:]
+
 def convert_price(price):
-    return int(str(price).lower() \
-            .replace("-", "") \
-            .replace(".", "") \
+    convert = ""
+    def string_numbers_convert(string):
+        flag = [False, False]
+        for i in string:
+            if i.isdigit():
+                flag[0] = True
+
+        if flag[0]:
+            for i in string:
+                if i == "т":
+                    flag[1] = True
+        
+        if flag[0] and flag[1]: return True
+        return False
+        
+    for string in price.split(" "):
+        if string_numbers_convert(string=string):
+            convert += string.replace("т", "000")
+
+
+    return int(str(convert) \
+        .replace(".", "") \
             .replace(",", "") \
-            .replace("т", "000"))
+                .replace(";", "")
+    )
 
 @sync_to_async
 def get_user_or_create(user_id: str, username=None):
@@ -813,7 +828,7 @@ def product_save_bez(user_id, data):
 
         product = data[0].replace("нет", "").replace("Нет", "")
         address = data[1].replace("нет", "").replace("Нет", "")
-        phone = data[2].replace("нет", "").replace("Нет", "")
+        phone = data[2].replace("нет", "").replace("Нет", "").replace("-", "")
         price = data[3].replace("нет", "").replace("Нет", "")
         note = data[4].replace("нет", "").replace("Нет", "")
 
