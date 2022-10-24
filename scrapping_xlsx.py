@@ -1,25 +1,19 @@
-import re
 
 
 def convert_price(price):
     convert = ""
     def string_numbers_convert(string):
-        flag = [False, False]
+        flag = False
         for i in string:
             if i.isdigit():
-                flag[0] = True
-
-        if flag[0]:
-            for i in string:
-                if i == "т":
-                    flag[1] = True
-        
-        if flag[0] and flag[1]: return True
-        return False
+                flag = True
+        return flag
         
     for string in price.split(" "):
         if string_numbers_convert(string=string):
-            convert += string.replace("т", "000")
+            for i in string:
+                if i == "т" or i.isdigit():
+                    convert += i.replace("т", "000")
 
 
     return int(str(convert) \
@@ -28,4 +22,4 @@ def convert_price(price):
                 .replace(";", "")
     )
 
-print(convert_price("рублей 1т,"))
+print(convert_price("Итого с доставкой: 56000₽"))
