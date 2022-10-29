@@ -232,12 +232,12 @@ def get_confirm_products():
 
 @sync_to_async
 def get_confirmed_products():
-    return Applications.objects.filter(status="Передан логисту")
+    return Applications.objects.filter(status="Упакован")
 
 
 @sync_to_async
 def get_pack_products():
-    return Applications.objects.filter(status="Подтвержден")
+    return Applications.objects.filter(status="Ожидает упаковки")
 
 @sync_to_async
 def pack_to_drive():
@@ -246,7 +246,7 @@ def pack_to_drive():
 
 @sync_to_async
 def pack_to_logist():
-    return Applications.objects.filter(status="Упакован")
+    return Applications.objects.filter(status="Передан диспетчеру")
 
 @sync_to_async
 def delete_product(product_id):
@@ -265,7 +265,7 @@ def delete_product(product_id):
 def product_pack_conf(product_id):
     try:
         a = Applications.objects.get(pk=product_id)
-        a.status = "Упакован"
+        a.status = "Передан диспетчеру"
         a.save()
         return "✅ Товар передан диспетчеру"
     except Exception as ex:
@@ -276,7 +276,7 @@ def product_pack_conf(product_id):
 def product_pack_logist(product_id):
     try:
         a = Applications.objects.get(pk=product_id)
-        a.status = "Передан логисту"
+        a.status = "Упакован"
         a.save()
         return "✅ Товар упакован и передан Логисту"
     except Exception as ex:
@@ -288,11 +288,11 @@ def report_info():
         expectation = Applications.objects.filter(
             status="Ожидание подтверждения"
         ).count()
-        confirmed = Applications.objects.filter(status="Подтвержден").count()
+        confirmed = Applications.objects.filter(status="Ожидает упаковки").count()
         canceled = Applications.objects.filter(status="Отменен").count()
-        transferred = Applications.objects.filter(status="Передан упаковщику").count()
-        y_logist = Applications.objects.filter(status="Передан логисту").count()
-        transferred_dispatcher = Applications.objects.filter(status="Упакован").count()
+        transferred = Applications.objects.filter(status="Ожидает отправки").count()
+        y_logist = Applications.objects.filter(status="Упакован").count()
+        transferred_dispatcher = Applications.objects.filter(status="Передан диспетчеру").count()
         drive = Applications.objects.filter(status="В дороге").count()
         delivered = Applications.objects.filter(status="Доставлен").count()
         matchs = Applications.objects.filter(status="Фабричный брак").count()
@@ -301,10 +301,10 @@ def report_info():
 
         text = f"""
 Ожидающие подтверждения:  <b>{expectation}</b>
-Подтвержденные:  <b>{confirmed}</b>
+Ожидает упаковки:  <b>{confirmed}</b>
 Отмененные:  <b>{canceled}</b>
-Переданные Упаковщику:  <b>{transferred}</b>
-Упакованные: <b>{y_logist}</b>
+Ожидает отправки:  <b>{transferred}</b>
+Передано логисту: <b>{y_logist}</b>
 Переданно диспетчеру:  <b>{transferred_dispatcher}</b>
 В дороге:  <b>{drive}</b>
 Дорожный брак: <b>{matchs2}</b>
@@ -323,10 +323,10 @@ def report_info():
 def confirm_product(product_id):
     try:
         p = Applications.objects.get(pk=product_id)
-        p.status = "Подтвержден"
+        p.status = "Ожидает упаковки"
         p.bool_status = True
         p.save()
-        return f"✅ Заказ <b>№{p.pk}</b> подтвержден"
+        return f"✅ Заказ <b>№{p.pk}</b> Ожидает упаковки"
     except Exception as ex:
         return "❌ " + str(ex)
 
@@ -335,10 +335,10 @@ def confirm_product(product_id):
 def product_pack(product_id, dist):
     try:
         p = Applications.objects.get(pk=product_id)
-        p.status = "Передан упаковщику"
+        p.status = "Ожидает отправки"
         p.direction = dist
         p.save()
-        return f"✅ Товар <b>№{p.pk}</b> Отправлен на Упаковку"
+        return f"✅ Товар <b>№{p.pk}</b> ожидает отправки"
     except Exception as ex:
         return "❌ " + str(ex)
 
@@ -477,6 +477,16 @@ def product_match(title, price, title2, price2, product_id, status):
         Applications.objects.create(
             note=p.note,
             address=p.address,
+            product=title,
+            phone=p.phone,
+            price=convert_price(price),
+            user=p.user,
+            bool_status=True,
+            status="Ожидает отправки",
+        )
+        Applications.objects.create(
+            note=p.note,
+            address=p.address,
             product=title2,
             phone=p.phone,
             price=convert_price(price2),
@@ -484,17 +494,6 @@ def product_match(title, price, title2, price2, product_id, status):
             status="Доставлен",
         )
         
-        Applications.objects.create(
-            note=p.note,
-            address=p.address,
-            product=title,
-            phone=p.phone,
-            price=convert_price(price),
-            user=p.user,
-            bool_status=True,
-            status="Передан упаковщику",
-        )
-        #
 
         return "✅ Успешно"
     # except Exception as ex:
@@ -538,9 +537,9 @@ def find_products(info):
 @sync_to_async
 def get_money():
     a = Applications.objects.all()
-    confirmed_request = Applications.objects.filter(status="Подтвержден")
-    dispatcher = Applications.objects.filter(status="Упакован")
-    packer = Applications.objects.filter(status="Передан упаковщику")
+    confirmed_request = Applications.objects.filter(status="Ожидает упаковки")
+    dispatcher = Applications.objects.filter(status="Передан диспетчеру")
+    packer = Applications.objects.filter(status="Ожидает отправки")
     driver = Applications.objects.filter(status="В дороге")
 
     total = 0
@@ -597,7 +596,7 @@ def get_money():
     text = f"""
 <b>📋 Заявки:</b>
 Итого 2,5% - <b>{round(total / 100 * 2.5, 10)} Рублей</b>
-Объем, ₽ (Подтвержденные) - <b>{round(total, 10)} Рублей</b>
+Объем, ₽ (Ожидает упаковки) - <b>{round(total, 10)} Рублей</b>
 Общий объем диспетчера, упаковщика, водителя ₽ - <b>{round(total_disp_pack_driv, 10)} Рублей</b>
 Объем у диспетчера, ₽ - <b>{round(total_dispatcher, 10)} Рублей</b>
 Объем у упаковщика, ₽ - <b>{round(total_packer, 10)} Рублей</b>
@@ -636,7 +635,7 @@ def get_ojid_confirmed():
 
 @sync_to_async
 def get_confirmed():
-    return Applications.objects.filter(status="Подтвержден")
+    return Applications.objects.filter(status="Ожидает упаковки")
 
 
 @sync_to_async
@@ -646,12 +645,12 @@ def get_canceled():
 
 @sync_to_async
 def get_packers():
-    return Applications.objects.filter(status="Передан упаковщику")
+    return Applications.objects.filter(status="Ожидает отправки")
 
 
 @sync_to_async
 def get_dispatchers():
-    return Applications.objects.filter(status="Упакован")
+    return Applications.objects.filter(status="Передан диспетчеру")
 
 
 @sync_to_async
@@ -692,7 +691,7 @@ def get_number_product(string):
 
 @sync_to_async
 def net_v_nalichii_logist():
-    return Applications.objects.filter(status="Передан логисту")
+    return Applications.objects.filter(status="Упакован")
 
 @sync_to_async
 def net_v_nalichii():

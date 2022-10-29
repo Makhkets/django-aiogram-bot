@@ -220,7 +220,7 @@ async def cloud():
                             logist.user_id, "❗ У вас есть необработанныее заказы"
                         )
 
-                elif product.status == "Подтвержден":
+                elif product.status == "Ожидает упаковки":
                     packers = await get_all_packers()
                     for packer in packers:
                         await bot.send_message(
