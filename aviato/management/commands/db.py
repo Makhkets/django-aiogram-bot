@@ -477,22 +477,24 @@ def product_match(title, price, title2, price2, product_id, status):
         Applications.objects.create(
             note=p.note,
             address=p.address,
-            product=title,
-            phone=p.phone,
-            price=convert_price(price),
-            user=p.user,
-            status="Передан упаковщику",
-        )
-        #
-        Applications.objects.create(
-            note=p.note,
-            address=p.address,
             product=title2,
             phone=p.phone,
             price=convert_price(price2),
             user=p.user,
             status="Доставлен",
         )
+        
+        Applications.objects.create(
+            note=p.note,
+            address=p.address,
+            product=title,
+            phone=p.phone,
+            price=convert_price(price),
+            user=p.user,
+            bool_status=True,
+            status="Передан упаковщику",
+        )
+        #
 
         return "✅ Успешно"
     # except Exception as ex:

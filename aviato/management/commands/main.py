@@ -68,6 +68,11 @@ async def count_bool(product):
         return "✅ Есть в наличии"
     return "❌ Нет в наличии ❌"
 
+def get_direction1(product):
+        if product.direction is None:
+            return "Не указано";
+        else: return product.direction   
+
 async def get_message_from_product(product):
     cout_bool = await count_bool(product=product)
     products_text = ""
@@ -75,6 +80,8 @@ async def get_message_from_product(product):
         if product.direction is None:
             return "Не указано";
         else: return product.direction   
+    
+    
     if "," in str(product.product):
         for i in str(product.product).replace('[', '').replace(']', '').split(','):
             products_text += f"{i}\n"
@@ -1527,7 +1534,7 @@ async def employees(message: types.Message):
     products = await get_pack_products()
     if len(products) >= 1:
         for product in products:
-            text = f"ID: {product.pk}\nНаправление: {product.direction}\nАдресс: {product.address}\nТовар: {product.product}\n"
+            text = f"ID: {product.pk}\nНаправление: <b>{get_direction1(product)}</b>\nАдресс: {product.address}\nТовар: {product.product}\n"
             inlineh1 = types.InlineKeyboardMarkup()
             inlineh1.row(
                 types.InlineKeyboardButton(
@@ -1763,9 +1770,9 @@ async def employees(message: types.Message, state: FSMContext):
     )
     cout_bool = await count_bool(product=product)
     if product.status == "Доставлен" or "В дороге" == product.status:
-        text = f"Информация о доставке: {str(product.delivery_information).replace('None', 'Отсутствует')}\nПримечание: {product.note}\nАдресс: {product.address}\nТовар: {product.product}\nЦена: {product.price}\nНомер: {product.phone}\nВладелец товара: @{product.user.username} ({product.user.role})\n\nID: {product.pk}\nЛокация водителя: {str(product.location).replace('None', 'Неизвестно')}\nИзменение локации было в: {str(product.time_update_location).split('.')[0]}\nСтатус заявки: {product.status}\n{cout_bool}"
+        text = f"Информация о доставке: {str(product.delivery_information).replace('None', 'Отсутствует')}\nПримечание: {product.note}\nАдресс: {product.address}\nТовар: {product.product}\nЦена: {product.price}\nНомер: {product.phone}\nВладелец товара: @{product.user.username} ({product.user.role})\nНаправление: <b>{get_direction1(product)}</b>\n\nID: {product.pk}\nЛокация водителя: {str(product.location).replace('None', 'Неизвестно')}\nИзменение локации было в: {str(product.time_update_location).split('.')[0]}\nСтатус заявки: {product.status}\n{cout_bool}"
     else:
-        text = f"Информация о доставке: {str(product.delivery_information).replace('None', 'Отсутствует')}\nПримечание: {product.note}\nАдресс: {product.address}\nТовар: {product.product}\nЦена: {product.price}\nНомер: {product.phone}\nЗагрузил товар: @{product.user.username} ({product.user.role})\n\nID: {product.pk}\nЛокация водителя: {str(product.location).replace('None', 'Неизвестно')}\nИзменение локации было в: {str(product.time_update_location).split('.')[0]}\nСтатус заявки: Подготавливается к отправке\n{cout_bool}"
+        text = f"Информация о доставке: {str(product.delivery_information).replace('None', 'Отсутствует')}\nПримечание: {product.note}\nАдресс: {product.address}\nТовар: {product.product}\nЦена: {product.price}\nНомер: {product.phone}\nЗагрузил товар: @{product.user.username} ({product.user.role})\nНаправление: <b>{get_direction1(product)}</b>\n\nID: {product.pk}\nЛокация водителя: {str(product.location).replace('None', 'Неизвестно')}\nИзменение локации было в: {str(product.time_update_location).split('.')[0]}\nСтатус заявки: Подготавливается к отправке\n{cout_bool}"
 
     await message.answer(text, reply_markup=inlineh1)
     await cloud()
@@ -2089,7 +2096,7 @@ async def efdsfsdff(message: types.Message, state: FSMContext):
                 except: await message.answer("❌ Чек не найден")
 
             cout_bool = await count_bool(product=product)
-            text = f"Информация о доставке: {str(product.delivery_information).replace('None', 'Отсутствует')}\nАдресс: <b>{product.address}</b>\nТовар: <b>{product.product}</b>\nЦена: <b>{product.price}</b>\nНомер: <b>{product.phone}</b>\nВладелец товара: <b>@{product.user.username} ({product.user.role})</b>\nПримечание: <b>{product.note}</b>\n\nID: <b>{product.pk}</b>\nСтатуc: <b>{product.status}</b>\nЛокация водителя: <b>{str(product.location).replace('None', 'Неизвестно')}</b>\nИзменение локации было в: <b>{str(product.time_update_location).split('.')[0]}</b>\n{cout_bool}"
+            text = f"Информация о доставке: {str(product.delivery_information).replace('None', 'Отсутствует')}\nАдресс: <b>{product.address}</b>\nТовар: <b>{product.product}</b>\nЦена: <b>{product.price}</b>\nНомер: <b>{product.phone}</b>\nВладелец товара: <b>@{product.user.username} ({product.user.role})</b>\nПримечание: <b>{product.note}</b>\nНаправление: <b>{get_direction1(product)}</b>\n\nID: <b>{product.pk}</b>\nСтатуc: <b>{product.status}</b>\nЛокация водителя: <b>{str(product.location).replace('None', 'Неизвестно')}</b>\nИзменение локации было в: <b>{str(product.time_update_location).split('.')[0]}</b>\n{cout_bool}"
             await message.answer(text, reply_markup=inlineh1)
             await state.finish()
 
