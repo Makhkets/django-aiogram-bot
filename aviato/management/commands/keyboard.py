@@ -18,6 +18,13 @@ def admin_menu():
     menu.row("❗ Нет в наличии ❗", "📊 Неотправленные")
     return menu
 
+def logist_packer_menu():
+    menu = types.ReplyKeyboardMarkup(resize_keyboard=True)
+    menu.row("⚡ Неупокованные заказы")
+    menu.row("📢 Логистика", "📊 Неотправленные") # 📚 Подтвержденные заявки
+    menu.row("🌏 Поиск заявок", "⚒ Браки")
+    menu.row("📕 Отчет", "💡 Ожидающие чека")
+    return menu
 
 def manager_menu():
     menu = types.ReplyKeyboardMarkup(resize_keyboard=True)
@@ -66,6 +73,7 @@ def employees_inline_menu():
 
 def employees_role_inline():
     inline_kb_full = types.InlineKeyboardMarkup()
+    inline_kb_full.row(types.InlineKeyboardButton("👨‍🔬 Упаковщик-Логист", callback_data="packer_logist_code"))
     inline_kb_full.row(types.InlineKeyboardButton("🗳️ Логист", callback_data="logist_code"), types.InlineKeyboardButton("👷‍♂️ Снабженец", callback_data="supplier_code"))
     inline_kb_full.row(types.InlineKeyboardButton("🛡️ Админ", callback_data="admin_code"), types.InlineKeyboardButton("⭐ Менеджер", callback_data="manager_code"))
     inline_kb_full.row(types.InlineKeyboardButton("👨‍💻 Оператор", callback_data="operator_code"), types.InlineKeyboardButton("🔧 Водитель", callback_data="driver_code"))

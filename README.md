@@ -1,7 +1,18 @@
+1. Сделать роль, которая объединяет функции упаковщика и логиста ✅
+2. Сделать так, чтобы бот реагировал на несколько статусов как на 1 ✅
+3. добавить редактирование с бота ✅
+
+4. добавление заявки с бота 
+
+
+
+
+
+
 
 ### Техническое задание проекта: https://miro.com/app/board/uXjVOsUyFh4=/?userEmail=rahimaliev999@gmail.com&track=true&utm_source=notification&utm_medium=email&utm_campaign=add-to-team-and-board&utm_content=go-to-board
 
-#
+
 # Summary
 
 Date : 2022-08-28 17:22:04
@@ -34,3 +45,6 @@ Summary / [Details](details.md) / [Diff Summary](diff.md) / [Diff Details](diff-
 ## Запуск бота и web админки
 * ### python manage.py runserver
 * ### python manage.py bot
+
+* celery -A app worker -l info
+* celery -A app beat -l info

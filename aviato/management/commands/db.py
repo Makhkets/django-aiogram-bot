@@ -6,6 +6,8 @@ from aviato.models import *
 from asgiref.sync import sync_to_async
 from loguru import logger as l
 
+from script.functions import updateSheet, getCoordinate
+
 def convert_phone_number(phone):
     dig = r'[\s-]*(\d)' * 6
     for i in re.findall(r'([78])[\s\(]*(\d{3})[\s\)]*(\d)' + dig, phone):
@@ -768,20 +770,24 @@ def сhange_opt(product_id, price):
 def change_product_request(product_id, new_products):
     p = Applications.objects.get(pk=product_id)
     product = new_products
-    product = product.split(" ")
-    PRODUCTS = []
-    for prd in product:
-        PRODUCTS.append(get_number_product_1(prd))
-    for j in PRODUCTS:
-        try:
-            if "не найден" in j:
-                return j
-        except:
-            pass
+    p.product = product; p.save()
 
-    p.product = new_products.split(" ")
-    p.save()
-    return "✅ Успешно изменил товары!"
+    try:
+        product = product.split(" ")
+        PRODUCTS = []
+        for prd in product:
+            PRODUCTS.append(get_number_product_1(prd))
+        for j in PRODUCTS:
+            try:
+                if "не найден" in j:
+                    pass
+            except:
+                pass
+
+        p.product = new_products.split(" ")
+        p.save()
+        return "✅ Успешно изменил товары!"
+    except: return "@ Успешно"
 
 @sync_to_async
 def change_address(product_id, new_address):
@@ -812,7 +818,6 @@ def change_phone(product_id, new_phone):
     p = Applications.objects.get(pk=product_id)
     p.phone = convert_phone_number(new_phone)
     p.save()
-
     return "✅ Успешно"
 
 

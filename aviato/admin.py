@@ -6,6 +6,8 @@ from loguru import logger as l
 from .models import *
 from .forms import *
 
+from script.functions import updateSheet, getCoordinate
+
 class ProfileAdmin(admin.ModelAdmin):
     list_display = ('id', 'user_id', 'first_name', 'username', 'role')
     search_fields = ('user_id', 'first_name', 'username', 'role')
@@ -17,13 +19,13 @@ class ProfileAdmin(admin.ModelAdmin):
 
 
 class ApplicationsAdmin(admin.ModelAdmin):
-    list_display = ('id', 'create_time', 'product', 'address', 'price',
+    list_display = ('id', 'create_time', 'product', "uniqueKey", 'address', 'price',
                     'phone', 'bool_status', 'status', 'note', "direction",
                     'driver', 'location', "delivery_information", 'user')
 
     search_fields = ['id', 'note', 'address', 'phone', 'price',
                      'time_update_location', 'product', "direction",
-                     'user__first_name', 'status', 'location']
+                     'user__first_name', 'status', 'location', "uniqueKey"]
     # list_editable = ('note', 'address', 'phone', 'price', 'product', 'user', 'status', 'driver', "location")
     list_filter = ('phone', 'time_update_location', 'status',
                    'driver', "direction")
@@ -67,15 +69,21 @@ class ApplicationsAdmin(admin.ModelAdmin):
             except Exception as ex:
                 return f"Такой товар не найден ({string}) ({str(ex)})"        
         
-
         obj.user = Profile.objects.all().first()
+
+        # SHEET UPDATE
+        # if "product" in form.changed_data or "price" in form.changed_data or \
+        #                                 "address" in form.changed_data or "phone" in form.changed_data or \
+        #                                             "status" in form.changed_data:
+        #     coordinate = getCoordinate(obj.uniqueKey)
+        #     updateSheet(coordinate, obj)
+
 
         product = obj.product
         if product is not None:
             product = product.split(" ")
             PRODUCTS = []
             for prd in product:
-                l.info(prd)
                 PRODUCTS.append(get_number_product_1(prd))
                 
             for j in PRODUCTS:
@@ -88,15 +96,17 @@ class ApplicationsAdmin(admin.ModelAdmin):
                         return j
                 except:
                     pass
-
-            for i in PRODUCTS:
-                if i.count < 0:
-                    obj.bool_count = False
-
-            obj.products.set(PRODUCTS)
             obj.save()
-        else: obj.bool_count = None
-        l.critical("dffsdfsd")
+            NEW_PRODUCTS = []
+            for i in PRODUCTS:
+                if type(i) is not str:
+                    if i.count < 0:
+                        obj.bool_count = False
+                    NEW_PRODUCTS.append(i)
+
+            obj.products.set(NEW_PRODUCTS)
+        else: 
+            obj.bool_count = None
         obj.save()
         return super().save_model()
 

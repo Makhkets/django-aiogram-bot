@@ -145,7 +145,7 @@ def main():
                     note=note,
                     uniqueKey=uniqueKey,
                     perform_logic=True,
-                ); print("Добавил новую заявку1")
+                ); print("Добавил новую заявку")
 
             except IndexError: pass
             except Exception as e:

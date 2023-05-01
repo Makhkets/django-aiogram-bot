@@ -121,6 +121,9 @@ async def get_menu(message):
     if message.chat.id in admins:
         await message.answer(text, reply_markup=admin_menu())
 
+    elif user.role == "Упаковщик-Логист":
+        await message.answer(text, reply_markup=logist_packer_menu())
+
     elif user.role == "Снабженец":
         await message.answer(text, reply_markup=supplier_menu())
 
@@ -270,6 +273,23 @@ async def add_employeees(call: types.CallbackQuery, state: FSMContext):
     )
     await cloud()
 
+
+
+@dp.callback_query_handler(text_startswith="packer_logist_code", state="*")
+async def dsa1rfxsf3(call: types.CallbackQuery, state: FSMContext):
+    code = randint(100, 999)
+    await create_code_employees(
+        user_id=call.message.chat.id, code=code, role="Упаковщик-Логист"
+    )
+    await get_menu_call(call)
+    await call.message.answer(
+        f"Код чтобы получить статус <b>Упаковщик-Логист</b> в боте\n\nКод: <code>{code}</code>"
+    )
+    await cloud()
+
+
+
+
 @dp.callback_query_handler(text_startswith="supplier_code", state="*")
 async def dsa1rfxsf3(call: types.CallbackQuery, state: FSMContext):
     code = randint(100, 999)
@@ -373,7 +393,11 @@ async def dasdasdsa2(message: types.Message, state: FSMContext):
             await message.answer("❌ Такой пользоватлеь не найден")
         else:
             inlineh1 = types.InlineKeyboardMarkup()
-
+            inlineh1.row(
+                types.InlineKeyboardButton(
+                    "👨‍🔬 Упаковщик-Логист", callback_data=f"remove_packer_logist:{user.user_id}"
+                )
+            )
             inlineh1.row(
                     types.InlineKeyboardButton("🗳️ Логист", callback_data="remove_logist_r"), 
                     types.InlineKeyboardButton("👷‍♂️ Снабженец", callback_data="remove_snabj_r")
@@ -409,6 +433,16 @@ async def dasdasdsa2(message: types.Message, state: FSMContext):
     await state.finish()
     await cloud()
 
+
+@dp.callback_query_handler(text_startswith="remove_packer_logist")
+async def handler(call: types.CallbackQuery):
+    user_id = call.data.split(":")[1]
+    user = await change_role_user(user_id=str(user_id), role="Упаковщик-Логист")
+    await get_menu_call(call)
+    await call.message.answer(
+        "✅ Успешно поменял роль сотрудника на роль: <b>Упаковщик-Логист</b>"
+    )
+    await cloud()
 
 @dp.callback_query_handler(text_startswith="remove_snabj_r")
 async def handler(call: types.CallbackQuery):
@@ -2096,7 +2130,10 @@ async def efdsfsdff(message: types.Message, state: FSMContext):
                 except: await message.answer("❌ Чек не найден")
 
             cout_bool = await count_bool(product=product)
-            text = f"Информация о доставке: {str(product.delivery_information).replace('None', 'Отсутствует')}\nАдресс: <b>{product.address}</b>\nТовар: <b>{product.product}</b>\nЦена: <b>{product.price}</b>\nНомер: <b>{product.phone}</b>\nВладелец товара: <b>@{product.user.username} ({product.user.role})</b>\nПримечание: <b>{product.note}</b>\nНаправление: <b>{get_direction1(product)}</b>\n\nID: <b>{product.pk}</b>\nСтатуc: <b>{product.status}</b>\nЛокация водителя: <b>{str(product.location).replace('None', 'Неизвестно')}</b>\nИзменение локации было в: <b>{str(product.time_update_location).split('.')[0]}</b>\n{cout_bool}"
+            if product.user is None:
+                text = f"Информация о доставке: {str(product.delivery_information).replace('None', 'Отсутствует')}\nАдресс: <b>{product.address}</b>\nТовар: <b>{product.product}</b>\nЦена: <b>{product.price}</b>\nНомер: <b>{product.phone}</b>\nВладелец товара: <b>Неизвестно</b>\nПримечание: <b>{product.note}</b>\nНаправление: <b>{get_direction1(product)}</b>\n\nID: <b>{product.pk}</b>\nСтатуc: <b>{product.status}</b>\nЛокация водителя: <b>{str(product.location).replace('None', 'Неизвестно')}</b>\nИзменение локации было в: <b>{str(product.time_update_location).split('.')[0]}</b>\n{cout_bool}"
+            else:
+                text = f"Информация о доставке: {str(product.delivery_information).replace('None', 'Отсутствует')}\nАдресс: <b>{product.address}</b>\nТовар: <b>{product.product}</b>\nЦена: <b>{product.price}</b>\nНомер: <b>{product.phone}</b>\nВладелец товара: <b>@{product.user.username} ({product.user.role})</b>\nПримечание: <b>{product.note}</b>\nНаправление: <b>{get_direction1(product)}</b>\n\nID: <b>{product.pk}</b>\nСтатуc: <b>{product.status}</b>\nЛокация водителя: <b>{str(product.location).replace('None', 'Неизвестно')}</b>\nИзменение локации было в: <b>{str(product.time_update_location).split('.')[0]}</b>\n{cout_bool}"
             await message.answer(text, reply_markup=inlineh1)
             await state.finish()
 
@@ -2232,7 +2269,9 @@ async def fldsk3(message: types.Message, state: FSMContext):
     new_products = message.text
     product_id = data["product_id"]
     text = await change_product_request(product_id, new_products)
+    l.success(text)
     await message.answer(text)
+    await message.answer("text")
     await get_menu(message)
     await state.finish()
 
