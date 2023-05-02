@@ -37,6 +37,7 @@ COLUMN_ID = {
 
 import os
 import sys
+import re
 import time
 import django
 
@@ -48,7 +49,14 @@ django.setup()
 
 from aviato.models import Applications
 
-
+def convert_phone_number_to_seven(phone):
+    dig = r'[\s-]*(\d)' * 6
+    for i in re.findall(r'([78])[\s\(]*(\d{3})[\s\)]*(\d)' + dig, phone):
+        res = ''.join(i)
+        c = res[0].replace("8", "7") + res[1:]
+        if c is None:
+            return f"Ошибка преобразования номера: ({phone})"
+        return c
 
 def init():
     creds = None
@@ -110,7 +118,7 @@ def main():
             try:
                 city = row[COLUMN_ID["C"]]
                 product = row[COLUMN_ID["D"]]
-                phone = row[COLUMN_ID["E"]]
+                phone = convert_phone_number_to_seven(row[COLUMN_ID["E"]])
                 price = row[COLUMN_ID["F"]]
                 status = row[COLUMN_ID["H"]]
                 
@@ -126,7 +134,7 @@ def main():
                                   a.address != city or a.note != note:
                         
                             a.product = product
-                            a.phone = phone
+                            a.phone = convert_phone_number_to_seven(phone)
                             a.price = price
                             a.status = get_status(status)
                             a.address = city
@@ -155,7 +163,7 @@ def main():
 
 while 1:
     main()
-    time.sleep(300)
+    time.sleep(120)
     
 
                 # row_number = index + 1

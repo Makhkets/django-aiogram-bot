@@ -787,7 +787,7 @@ def change_product_request(product_id, new_products):
         p.product = new_products.split(" ")
         p.save()
         return "✅ Успешно изменил товары!"
-    except: return "@ Успешно"
+    except: return "# Успешно"
 
 @sync_to_async
 def change_address(product_id, new_address):
@@ -833,18 +833,21 @@ def product_save_bez(user_id, data):
         price = data[3].replace("нет", "").replace("Нет", "")
         note = data[4].replace("нет", "").replace("Нет", "")
 
-        a = Applications.objects.create(
-            product=product,
-            note=note,
-            address=address,
-            phone=convert_phone_number_to_seven(phone),
-            price=convert_price(price),
-            user=user,
-            bool_count=None,
-            status="Ожидание подтверждения",
-        )
-
-        a.save()
+        converted_phone = convert_phone_number_to_seven(phone)
+        if converted_phone is None: 
+            return f"❌ Вы ввели неправильный номер!" 
+        else:
+            a = Applications.objects.create(
+                product=product,
+                note=note,
+                address=address,
+                phone=converted_phone,
+                price=convert_price(price),
+                user=user,
+                bool_count=None,
+                status="Ожидание подтверждения",
+            )
+        # a.save(perform_logic=True)
 
         return "✅ Успешно добавил заявку в базу"
     except Exception as ex: return f"❌ Произошла ошибка ({str(ex)})" 

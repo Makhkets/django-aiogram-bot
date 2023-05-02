@@ -2,6 +2,7 @@ from pprint import pprint
 from django.contrib import admin
 
 from loguru import logger as l
+import time
 
 from .models import *
 from .forms import *
@@ -110,6 +111,11 @@ class ApplicationsAdmin(admin.ModelAdmin):
         obj.save()
         return super().save_model()
 
+    def delete_queryset(self, request, queryset):
+        for model in queryset:
+            model.delete()
+            time.sleep(7)
+        # super().delete_queryset(queryset)
 
 class ProductsAdmin(admin.ModelAdmin):
     list_display = ('id', 'availability', 'product', 'count', 'opt_price', "product_suum", "product_percent")

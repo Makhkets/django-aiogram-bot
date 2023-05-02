@@ -1,6 +1,8 @@
 from __future__ import print_function
 
 import os.path
+import time
+import re
 
 from google.auth.transport.requests import Request
 from google.oauth2.credentials import Credentials
@@ -9,7 +11,6 @@ from googleapiclient.discovery import build
 from googleapiclient.errors import HttpError
 
 from .variables import *
-
 
 def init():
     creds = None
@@ -27,6 +28,14 @@ def init():
             
     return build('sheets', 'v4', credentials=creds)
 
+def convert_phone_number_to_seven(phone):
+    dig = r'[\s-]*(\d)' * 6
+    for i in re.findall(r'([78])[\s\(]*(\d{3})[\s\)]*(\d)' + dig, phone):
+        res = ''.join(i)
+        c = res[0].replace("8", "7") + res[1:]
+        if c is None:
+            return f"Ошибка преобразования номера: ({phone})"
+        return c
 
 
 def getCoordinate(uniqueKey):
@@ -48,7 +57,7 @@ def getCoordinate(uniqueKey):
                 
             except Exception as e:
                 print(f"Error row: {e}")
-
+        time.sleep(1)
     return coordinates
 
 def correct_status(status):
@@ -89,7 +98,7 @@ def getWriteInfo(data, symbol):
     elif "D" == symbol:
         return data.product
     elif "E" == symbol:
-        return data.phone
+        return convert_phone_number_to_seven(data.phone)
     elif "F" == symbol:
         return data.price
     elif "H" == symbol:
@@ -98,12 +107,11 @@ def getWriteInfo(data, symbol):
         return data.note
     
 
-def  updateSheet(coordinates, data):
+def updateSheet(coordinates, data):
     # C-city, D-product, E-phone, F-price, H-status
     symbols = ["C", "D", "E", "F", "H", "J"]
+    sheet = init().spreadsheets()
     for coordinate in coordinates:
-        sheet = init().spreadsheets()
-
         for symbol in symbols:
             range_name = f"{coordinate[1]}!{symbol}{coordinate[0]}"
             sheet.values().update(
@@ -112,10 +120,11 @@ def  updateSheet(coordinates, data):
                 valueInputOption="USER_ENTERED",
                 body={"values": [[getWriteInfo(data, symbol)]]}
             ).execute()
+            time.sleep(1)
 
 def append_to_sheet(data):
     # C-city, D-product, E-phone, F-price, H-status
-    symbols = ["C", "D", "E", "F", "H"]
+    symbols = ["C", "D", "E", "F", "H", "J"]
     sheet = init().spreadsheets()
     range_ = f'Заявки!C:J'
 
@@ -130,6 +139,7 @@ def append_to_sheet(data):
 
 
     for symbol in symbols:
+        time.sleep(1)
         range_name = f"Заявки!{symbol}{last_row_index}"
         sheet.values().update(
             spreadsheetId=SAMPLE_SPREADSHEET_ID,
@@ -137,5 +147,28 @@ def append_to_sheet(data):
             valueInputOption="USER_ENTERED",
             body={"values": [[getWriteInfo(data, symbol)]]}
         ).execute()
+        
 
     print("Загрузил новую строку в google sheets")
+
+    return last_row_index
+
+def delete_sheet_information(data):
+    sheet_info = getCoordinate(data.uniqueKey)
+    coordinate = sheet_info[0][0]
+    current_sheet = sheet_info[0][1]
+
+    print("Координаты удаления:", coordinate)
+    print("Лист:", current_sheet)
+
+    sheet = init().spreadsheets()
+    symbols = ["C", "D", "E", "F", "H", "J"]
+    for symbol in symbols:
+        range_name = f"{current_sheet}!{symbol}{coordinate}"
+        sheet.values().update(
+            spreadsheetId=SAMPLE_SPREADSHEET_ID,
+            range=range_name,
+            valueInputOption="USER_ENTERED",
+            body={"values": [[""]]}
+        ).execute()
+        time.sleep(1)

@@ -4,7 +4,7 @@ from loguru import logger
 import string
 import random
 
-from script.functions import updateSheet, append_to_sheet, getCoordinate
+from script.functions import updateSheet, delete_sheet_information, append_to_sheet, getCoordinate
 
 def generate_random_string(length):
     letters = string.ascii_lowercase
@@ -101,13 +101,16 @@ class Applications(models.Model):
 
     def save(self, *args, **kwargs):
         # Если True, то не выполнять логику (if)
+        perform_ = kwargs.pop('perform_logic', False)
         super(Applications, self).save(*args, **kwargs)
-        if kwargs.pop('perform_logic', False): pass
+        if perform_: pass
         else:
             logger.success("PERFORM LOGIC")
             if self.uniqueKey == "":
                 # append_to_sheet(self)
-                append_to_sheet(self)
+                unk = append_to_sheet(self)
+                self.uniqueKey = unk
+                self.save(perform_logic=True)
                 pass
             else:
                 coordinate = getCoordinate(self.uniqueKey)
@@ -124,7 +127,9 @@ class Applications(models.Model):
         obj = cls(**kwargs)
         obj.save_alternative()
         if not perform_logic:
-            append_to_sheet(obj)
+            unk = append_to_sheet(obj)
+            obj.uniqueKey = unk
+            obj.save(perform_logic=True)
         return obj
 
 
@@ -132,6 +137,13 @@ class Applications(models.Model):
         logger.success("Выполняется perform logic")
         coordinate = getCoordinate(self.uniqueKey)
         updateSheet(coordinate, self)
+
+
+    def delete(self, *args, **kwargs):
+        print("Выполняю удаление")
+        delete_sheet_information(self)
+        super(Applications, self).delete(*args, **kwargs)
+
 
 
     class Meta:
