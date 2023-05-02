@@ -557,7 +557,7 @@ async def userrequests(message: types.Message, state: FSMContext):
 async def add_employeees(call: types.CallbackQuery, state: FSMContext):
     await call.message.delete()
     await call.message.answer(
-        "🖋 Заполните и отправьте следующий шаблон\n\nТовар\nАдрес\nНомер (только цифры)\nЦена (число)\nПримечание\n\nЧтобы отменить загрузку товара напишите /start"
+        "🖋 Заполните и отправьте следующий шаблон\n\nТовар\nАдрес\nГород\nНомер (только цифры)\nЦена (число)\nПримечание\n\nЧтобы отменить загрузку товара напишите /start"
     )
     await D.note1.set()
     await cloud()
@@ -2318,7 +2318,7 @@ async def fdsfq3xf(message: types.Message, state: FSMContext):
 
 @dp.message_handler(text="🛒 Изменить товар")
 async def fsfdsjfk23(message: types.Message, state: FSMContext):
-    await message.answer("Введит <b>Артикул</b> или <b>Айди</b>")
+    await message.answer("Введите <b>Артикул</b> или <b>Айди</b>")
     await D.change_tovar.set()
 
 

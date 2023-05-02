@@ -94,7 +94,7 @@ def correct_status(status):
 
 def getWriteInfo(data, symbol):
     if "C" == symbol:
-        return data.address
+        return data.address.split("г.")[1].split("\n")[0]
     elif "D" == symbol:
         return data.product
     elif "E" == symbol:
@@ -103,8 +103,8 @@ def getWriteInfo(data, symbol):
         return data.price
     elif "H" == symbol:
         return correct_status(data.status)
-    elif "J" == symbol:
-        return data.note
+    elif "J" == symbol: # Примечание
+        return f"{data.address}\n\n{convert_phone_number_to_seven(data.phone)}\n\n{data.product}\n\n{data.note}\n\nИтоговая: {data.price}"
     
 
 def updateSheet(coordinates, data):

@@ -826,18 +826,20 @@ def change_phone(product_id, new_phone):
 def product_save_bez(user_id, data):
     try:
         user = Profile.objects.get(user_id=str(user_id))
+        
+        city = data[2].replace("нет", "").replace("Нет", "")
 
         product = data[0].replace("нет", "").replace("Нет", "")
-        address = data[1].replace("нет", "").replace("Нет", "")
-        phone = data[2].replace("нет", "").replace("Нет", "").replace("-", "")
-        price = data[3].replace("нет", "").replace("Нет", "")
-        note = data[4].replace("нет", "").replace("Нет", "")
+        address = f'г.{city}\n{data[1].replace("нет", "").replace("Нет", "")}'
+        phone = data[3].replace("нет", "").replace("Нет", "").replace("-", "")
+        price = data[4].replace("нет", "").replace("Нет", "")
+        note = data[5].replace("нет", "").replace("Нет", "")
 
         converted_phone = convert_phone_number_to_seven(phone)
         if converted_phone is None: 
             return f"❌ Вы ввели неправильный номер!" 
         else:
-            a = Applications.objects.create(
+            Applications.objects.create(
                 product=product,
                 note=note,
                 address=address,
