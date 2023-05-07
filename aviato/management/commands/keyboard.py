@@ -87,6 +87,6 @@ def question_photo():
 
 def get_choice_application():
     inline_kb_full = types.InlineKeyboardMarkup()
-    inline_kb_full.row(types.InlineKeyboardButton("🎁 Заявка с Товаром", callback_data="s_product"))
+    # inline_kb_full.row(types.InlineKeyboardButton("🎁 Заявка с Товаром", callback_data="s_product"))
     inline_kb_full.row(types.InlineKeyboardButton("⚠ Заявка без Товара", callback_data="bez_product"))
     return inline_kb_full

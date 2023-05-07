@@ -205,9 +205,10 @@ async def cloud():
             every_hours = current_time - time - 3
             if every_hours > 6:
                 if product.status == "В дороге":
-                    await bot.send_message(
-                        product.user.user_id, "❗ Обновите свою геолокацию"
-                    )
+                    if product.driver is not None:
+                        await bot.send_message(
+                            product.driver.user_id, "❗ Обновите свою геолокацию"
+                        )
             if every_hours > 20:
                 if product.status == "Ожидание подтверждения":
                     operators = await get_operators()
@@ -556,8 +557,21 @@ async def userrequests(message: types.Message, state: FSMContext):
 @dp.callback_query_handler(text_startswith="bez_product", state="*")
 async def add_employeees(call: types.CallbackQuery, state: FSMContext):
     await call.message.delete()
+    text = f"""
+🖋 Заполните и отправьте следующий шаблон
+
+Адрес
+Город
+Номер
+Товар
+Сумма 
+Примечание
+
+Чтобы отменить загрузку товара напишите /start
+    """
     await call.message.answer(
-        "🖋 Заполните и отправьте следующий шаблон\n\nТовар\nАдрес\nГород\nНомер (только цифры)\nЦена (число)\nПримечание\n\nЧтобы отменить загрузку товара напишите /start"
+        text,
+        # "🖋 Заполните и отправьте следующий шаблон\n\nТовар\nАдрес\nГород\nНомер (только цифры)\nЦена (число)\nПримечание\n\nЧтобы отменить загрузку товара напишите /start"
     )
     await D.note1.set()
     await cloud()

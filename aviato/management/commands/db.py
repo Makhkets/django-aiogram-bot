@@ -827,11 +827,11 @@ def product_save_bez(user_id, data):
     try:
         user = Profile.objects.get(user_id=str(user_id))
         
-        city = data[2].replace("нет", "").replace("Нет", "")
+        city = data[1].replace("нет", "").replace("Нет", "")
 
-        product = data[0].replace("нет", "").replace("Нет", "")
-        address = f'г.{city}\n{data[1].replace("нет", "").replace("Нет", "")}'
-        phone = data[3].replace("нет", "").replace("Нет", "").replace("-", "")
+        product = data[3].replace("нет", "").replace("Нет", "")
+        address = f'г.{city}\n{data[0].replace("нет", "").replace("Нет", "")}'
+        phone = data[2].replace("нет", "").replace("Нет", "").replace("-", "")
         price = data[4].replace("нет", "").replace("Нет", "")
         note = data[5].replace("нет", "").replace("Нет", "")
 

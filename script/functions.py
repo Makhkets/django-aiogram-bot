@@ -103,9 +103,14 @@ def getWriteInfo(data, symbol):
         return data.price
     elif "H" == symbol:
         return correct_status(data.status)
-    elif "J" == symbol: # Примечание
-        return f"{data.address}\n\n{convert_phone_number_to_seven(data.phone)}\n\n{data.product}\n\n{data.note}\n\nИтоговая: {data.price}"
-    
+    elif "J" == symbol: # Примечание``
+        address = data.address.split('\n')[1]
+        return f"{address} \
+            \n\n{convert_phone_number_to_seven(data.phone)} \
+            \n\n{data.product} \
+            \n\n{data.note} \
+            \n\nИтоговая: {data.price}"
+
 
 def updateSheet(coordinates, data):
     # C-city, D-product, E-phone, F-price, H-status
